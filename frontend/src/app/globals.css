@@ -1,0 +1,201 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-primary-50: hsl(var(--primary-50));
+  --color-primary-100: hsl(var(--primary-100));
+  --color-primary-200: hsl(var(--primary-200));
+  --color-primary-300: hsl(var(--primary-300));
+  --color-primary-400: hsl(var(--primary-400));
+  --color-primary-500: hsl(var(--primary-500));
+  --color-primary-600: hsl(var(--primary-600));
+  --color-primary-700: hsl(var(--primary-700));
+  --color-primary-800: hsl(var(--primary-800));
+  --color-primary-900: hsl(var(--primary-900));
+  --color-secondary-50: hsl(var(--secondary-50));
+  --color-secondary-100: hsl(var(--secondary-100));
+  --color-secondary-200: hsl(var(--secondary-200));
+  --color-secondary-300: hsl(var(--secondary-300));
+  --color-secondary-400: hsl(var(--secondary-400));
+  --color-secondary-500: hsl(var(--secondary-500));
+  --color-secondary-600: hsl(var(--secondary-600));
+  --color-secondary-700: hsl(var(--secondary-700));
+  --color-secondary-800: hsl(var(--secondary-800));
+  --color-secondary-900: hsl(var(--secondary-900));
+  --color-accent-50: hsl(var(--accent-50));
+  --color-accent-500: hsl(var(--accent-500));
+  --color-gray-50: hsl(var(--gray-50));
+  --color-gray-100: hsl(var(--gray-600));
+  --color-gray-200: hsl(var(--gray-500));
+  --color-gray-300: hsl(var(--gray-300));
+  --color-gray-400: hsl(var(--gray-400));
+  --color-gray-500: hsl(var(--gray-500));
+  --color-gray-600: hsl(var(--gray-600));
+  --color-gray-700: hsl(var(--gray-700));
+  --color-gray-800: hsl(var(--gray-800));
+  --color-gray-900: hsl(var(--gray-900));
+  --color-gray-950: hsl(var(--gray-950));
+
+  /* Shadows */
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --shadow-glass-hover: 0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.05);
+  --shadow-premium: var(--shadow-premium);
+}
+
+@layer base {
+  :root {
+    /* Light Mode - White Background */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    /* Primary Colors - Vibrant Blue (#3B82F6) - More Powerful */
+    --primary-50: 213.8 100% 97%;
+    --primary-100: 214.3 95% 93%;
+    --primary-200: 213.3 97% 88%;
+    --primary-300: 211.7 97% 79%;
+    --primary-400: 213.1 94% 69%;
+    --primary-500: 217.2 92% 61%;
+    --primary-600: 221.2 84% 55%;
+    --primary-700: 224.3 77% 50%;
+    --primary-800: 225.9 71% 42%;
+    --primary-900: 224.4 65% 35%;
+
+    /* Secondary Colors - Vibrant Purple (#A855F7) - More Powerful */
+    --secondary-50: 270 100% 98%;
+    --secondary-100: 269.2 98% 96%;
+    --secondary-200: 268.8 96% 92%;
+    --secondary-300: 268.7 92% 85%;
+    --secondary-400: 270.7 92% 77%;
+    --secondary-500: 271.5 82% 58%;
+    --secondary-600: 271.2 82% 49%;
+    --secondary-700: 272.1 72% 43%;
+    --secondary-800: 272.9 68% 37%;
+    --secondary-900: 273.6 66% 31%;
+
+    /* Gray Scale - HIGH CONTRAST ADJUSTMENT */
+    /* Darker grays for light mode to improve readability */
+    --gray-50: 210 20% 98%;
+    --gray-100: 220 14% 94%; /* Darkened slightly */
+    --gray-200: 220 13% 88%; /* Darkened */
+    --gray-300: 216 12% 80%; /* Darkened */
+    --gray-400: 218 11% 60%; /* Darkened significantly for text */
+    --gray-500: 220 9% 40%; /* Darkened */
+    --gray-600: 215 14% 30%; /* Darkened */
+    --gray-700: 217 33% 15%; /* Darkened */
+    --gray-800: 215 28% 10%; /* Darkened */
+    --gray-900: 221 40% 5%; /* Almost black */
+
+    /* Semantic Colors from DESIGN_GUIDE.md */
+    --success-500: 160 84.1% 39.4%;
+    --success-600: 161 93.5% 30.4%;
+    --success-700: 162 93.2% 24.3%;
+    --warning-500: 37.7 92.1% 50.2%;
+    --warning-600: 32.1 94.6% 43.7%;
+    --warning-700: 27.3 96% 36.5%;
+    --error-500: 0 84.2% 60.2%;
+    --error-600: 0 72.2% 50.6%;
+    --error-700: 0 73.7% 41.8%;
+    --info-500: 188.7 94.5% 42.7%;
+    --info-600: 191.6 91.4% 36.5%;
+    --info-700: 192.9 82.3% 31.4%;
+
+    --radius: 1rem;
+    --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 5px 20px -5px rgba(0, 0, 0, 0.02);
+  }
+
+  .dark {
+    /* Dark Mode - Dark Gray Background (like promotions page) */
+    --background: 222.2 47.4% 11.2%;
+    --foreground: 210 40% 98%;
+
+    /* Primary Colors - More Vibrant for dark mode */
+    --primary-50: 217.2 92% 61%;
+    --primary-100: 214.3 95% 93%;
+    --primary-500: 217.2 92% 61%;
+    --primary-600: 221.2 84% 55%;
+    --primary-700: 224.3 77% 50%;
+
+    /* Secondary Colors - More Vibrant */
+    --secondary-500: 271.5 82% 58%;
+    --secondary-600: 271.2 82% 49%;
+
+    /* Gray Scale for Dark Mode - HIGH CONTRAST ADJUSTMENT */
+    /* Lighter grays for dark mode to improve readability vs dark background */
+    --gray-50: 222 47% 11%; /* Background base */
+    --gray-100: 220 14% 25%; /* Lighter for borders/cards */
+    --gray-200: 215 16% 35%; /* Lighter */
+    --gray-300: 215 19% 45%; /* Lighter */
+    --gray-400: 215 20% 65%; /* Light gray for secondary text */
+    --gray-500: 215 25% 75%; /* Lighter */
+    --gray-600: 215 16% 85%; /* Very light for primary text */
+    --gray-700: 215 19% 92%; /* Almost white */
+    --gray-800: 217 32% 96%; /* White */
+    --gray-900: 210 40% 99%; /* Pure white */
+
+    --shadow-premium: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+
+  body {
+    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer components {
+  .glass-effect {
+    @apply bg-white/70 dark:bg-gray-950/70 backdrop-blur-2xl border border-white/20 dark:border-white/5 shadow-premium;
+  }
+
+  .glass-card {
+    @apply bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 shadow-premium rounded-3xl hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out hover:-translate-y-1;
+  }
+
+  .bg-mesh {
+    @apply fixed inset-0 -z-30 overflow-hidden bg-background;
+  }
+
+  .mesh-gradient {
+    background-image: radial-gradient(at 0% 0%, hsla(250,85%,60%,0.15) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(270,85%,60%,0.15) 0, transparent 50%), radial-gradient(at 50% 50%, hsla(190,90%,50%,0.08) 0, transparent 50%), radial-gradient(at 0% 100%, hsla(270,85%,60%,0.1) 0, transparent 50%), radial-gradient(at 100% 100%, hsla(250,85%,60%,0.15) 0, transparent 50%);
+    filter: blur(100px);
+    opacity: 0.8;
+  }
+
+  .gradient-bg-primary {
+    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-primary-500 via-primary-600 to-primary-700 font-extrabold tracking-tight;
+  }
+
+  /* Added Premium Hover Effects */
+  .hover-glow {
+    @apply relative overflow-hidden;
+  }
+
+  .hover-glow::after {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-0 transition-opacity duration-300;
+  }
+
+  .hover-glow:hover::after {
+    @apply opacity-100;
+  }
+}
+
+/* Custom Scrollbar for Premium Feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 dark:bg-gray-800 rounded-full border-4 border-transparent bg-clip-padding hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors;
+}
