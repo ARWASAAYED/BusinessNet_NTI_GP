@@ -3,6 +3,7 @@ import api from './api';
 export interface User {
   _id: string;
   username: string;
+  fullName: string;
   email: string;
   avatar?: string;
   bio?: string;
@@ -11,6 +12,7 @@ export interface User {
   accountType: 'user' | 'business';
   followers: string[];
   following: string[];
+  badges?: any[]; // Should ideally link to Badge type, but any is safe for now
   createdAt: string;
   updatedAt: string;
 }

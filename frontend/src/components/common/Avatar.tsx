@@ -2,7 +2,7 @@ import Image from 'next/image';
 
 interface AvatarProps {
   src?: string;
-  alt: string;
+  alt?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
@@ -39,6 +39,10 @@ const Avatar: React.FC<AvatarProps> = ({
   // Check if src is a valid URL
   const isValidUrl = resolvedSrc && (resolvedSrc.startsWith('http') || resolvedSrc.startsWith('/'));
 
+  // Provide fallback for alt text
+  const altText = alt || 'User';
+  const initials = altText.substring(0, 2).toUpperCase();
+
   return (
     <div
       className={`relative flex shrink-0 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 ${sizeMap[size]} ${className}`}
@@ -46,7 +50,7 @@ const Avatar: React.FC<AvatarProps> = ({
       {resolvedSrc && isValidUrl ? (
         <Image
           src={resolvedSrc}
-          alt={alt}
+          alt={altText}
           width={pixelSizeMap[size]}
           height={pixelSizeMap[size]}
           className="aspect-square h-full w-full object-cover"
@@ -54,7 +58,7 @@ const Avatar: React.FC<AvatarProps> = ({
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-semibold uppercase">
-          {alt.substring(0, 2)}
+          {initials}
         </div>
       )}
     </div>

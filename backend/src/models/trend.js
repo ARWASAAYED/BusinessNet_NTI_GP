@@ -9,8 +9,13 @@ const trendSchema = new mongoose.Schema({
   sourceType: { type: String, enum: ["organic","promoted","bot"], default: "organic" },
   promotedTrendId: { type: mongoose.Schema.Types.ObjectId, ref: "PromotedTrend" },
   status: { type: String, enum: ["rising","hot","falling"], default: "rising" },
+  dailyChange: { type: Number, default: 0 }, // Percentage change in the last 24h
+  weeklyHistory: [{
+    date: Date,
+    score: Number
+  }],
   detectedAt: { type: Date, default: Date.now },
-  postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" } // Top post or typical post associated with this trend
+  postId: { type: mongoose.Schema.Types.ObjectId, ref: "Post" } 
 });
 
 module.exports = mongoose.models.Trend || mongoose.model("Trend", trendSchema);

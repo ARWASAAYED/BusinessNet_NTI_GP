@@ -1,205 +1,195 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Button from "@/components/common/Button";
-import Card from "@/components/common/Card";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  ArrowRight,
+  Sparkles,
+  Users,
+  TrendingUp,
+  MessageSquare,
+  Zap,
+  BarChart3,
+  Award,
+  Check,
+  ChevronRight,
+  Play,
+  Star,
+  Building2,
+  Target,
+  Rocket,
+  Menu,
+  X,
+} from "lucide-react";
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const stagger = {
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+function LandingNavbar() {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  return (
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? "bg-white/90 dark:bg-gray-950/90 backdrop-blur-md shadow-sm border-b dark:border-gray-800" : "bg-transparent"}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="p-2 bg-primary-600 rounded-lg group-hover:scale-110 transition-transform">
+              <Building2 className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-2xl font-black tracking-tighter text-gray-900 dark:text-white">BusinessNet</span>
+          </Link>
+          <div className="hidden md:flex items-center gap-8 font-semibold">
+            <a href="#features" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">Features</a>
+            <a href="#pricing" className="text-gray-600 dark:text-gray-400 hover:text-primary-600 transition-colors">Pricing</a>
+            <Link href="/login" className="text-gray-900 dark:text-white hover:text-primary-600 transition-colors">Sign In</Link>
+            <Link href="/register" className="px-6 py-3 bg-primary-600 hover:bg-primary-700 text-white rounded-full transition-all shadow-lg shadow-primary-500/20 active:scale-95">Get Started</Link>
+          </div>
+          <button className="md:hidden text-gray-900 dark:text-white" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X /> : <Menu />}
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function Hero() {
+  return (
+    <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary-500/10 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-secondary-500/10 rounded-full blur-[120px] animate-pulse delay-700" />
+      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center lg:text-left">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <motion.div initial="hidden" animate="visible" variants={stagger}>
+            <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-sm font-bold mb-8">
+              <Sparkles className="w-4 h-4" /> AI-POWERED B2B NETWORKING
+            </motion.div>
+            <motion.h1 variants={fadeInUp} className="text-5xl lg:text-7xl font-black text-gray-900 dark:text-white leading-[1.1] mb-8 tracking-tight">
+              Scale Your Business <br /> <span className="text-primary-600">Faster Than Ever.</span>
+            </motion.h1>
+            <motion.p variants={fadeInUp} className="text-xl text-gray-600 dark:text-gray-400 mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              The only platform designed for professional growth with real-time analytics, automated lead discovery, and secure B2B messaging.
+            </motion.p>
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Link href="/register" className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-bold text-lg rounded-2xl flex items-center justify-center gap-2 shadow-xl shadow-primary-500/20 transition-all hover:-translate-y-1">
+                Start Free Trial <ArrowRight className="w-5 h-5" />
+              </Link>
+              <button className="px-8 py-4 bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 text-gray-900 dark:text-white font-bold text-lg rounded-2xl hover:border-primary-500 transition-all">
+                Book a Demo
+              </button>
+            </motion.div>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} className="hidden lg:block relative">
+            <div className="p-8 bg-white dark:bg-gray-900 rounded-[2rem] shadow-2xl border dark:border-gray-800">
+               <div className="flex items-center justify-between mb-8">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-400" />
+                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <div className="w-3 h-3 rounded-full bg-green-400" />
+                  </div>
+                  <div className="text-xs uppercase tracking-widest font-black text-gray-400">ANALYTICS ENGINE V2.0</div>
+               </div>
+               <div className="grid grid-cols-3 gap-6 mb-8">
+                 {[40, 70, 55].map((h, i) => (
+                   <div key={i} className="h-32 bg-gray-50 dark:bg-gray-800/50 rounded-xl flex items-end p-2">
+                     <div className="w-full bg-primary-500 rounded-lg transition-all duration-1000" style={{ height: `${h}%` }} />
+                   </div>
+                 ))}
+               </div>
+               <div className="space-y-4">
+                 <div className="p-4 bg-primary-50 dark:bg-primary-900/20 rounded-xl border border-primary-100 dark:border-primary-800">
+                   <div className="flex justify-between items-center text-sm font-bold text-primary-700 dark:text-primary-400 mb-1">
+                     <span>Campaign Performance</span>
+                     <span>+127%</span>
+                   </div>
+                   <div className="w-full bg-primary-200 dark:bg-primary-900/40 h-2 rounded-full">
+                     <div className="w-[85%] bg-primary-600 h-full rounded-full" />
+                   </div>
+                 </div>
+               </div>
+            </div>
+            <div className="absolute -top-6 -right-6 p-4 bg-white dark:bg-gray-800 rounded-2xl shadow-xl border dark:border-gray-700 animate-bounce">
+              <TrendingUp className="w-8 h-8 text-green-500" />
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push("/feed");
-    }
+    if (!isLoading && isAuthenticated) router.push("/feed");
   }, [isAuthenticated, isLoading, router]);
 
   if (isLoading || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <main className="flex-1">
-      {/* Hero Section */}
-      <section className="relative py-24 lg:py-40 overflow-hidden">
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-block px-4 py-1.5 mb-8 text-sm font-semibold tracking-wide text-primary-600 dark:text-primary-400 uppercase bg-primary-50 dark:bg-primary-900/30 rounded-full border border-primary-200 dark:border-primary-800">
-              AI-Powered Professional Network
-            </div>
-            <h1 className="text-6xl lg:text-8xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100 font-heading mb-8 leading-tight">
-              Connect the <span className="gradient-text">Future of Business</span>
-            </h1>
-            <p className="text-xl lg:text-2xl text-gray-500 dark:text-gray-400 mb-12 leading-relaxed max-w-2xl mx-auto">
-              Join a global ecosystem of industry leaders, innovators, and entrepreneurs scale their professional presence.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Link href="/register">
-                <Button size="lg" className="h-16 px-12 text-xl rounded-2xl w-full sm:w-auto">
-                  Start Growing Now
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button variant="outline" size="lg" className="h-16 px-12 text-xl rounded-2xl w-full sm:w-auto">
-                  Explore Platform
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-        
-        {/* Animated Background Blobs */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-0 pointer-events-none">
-          <div className="absolute top-1/4 -left-20 w-[600px] h-[600px] bg-primary-500/10 rounded-full blur-[120px] animate-blob"></div>
-          <div className="absolute top-1/3 -right-20 w-[500px] h-[500px] bg-secondary-500/10 rounded-full blur-[120px] animate-blob delay-2000"></div>
-          <div className="absolute -bottom-20 left-1/3 w-[550px] h-[550px] bg-blue-500/10 rounded-full blur-[120px] animate-blob delay-4000"></div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-24 bg-white dark:bg-gray-950">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
-            <div className="max-w-2xl">
-              <h2 className="text-4xl lg:text-5xl font-bold font-heading mb-6 tracking-tight text-gray-900 dark:text-gray-100">
-                The ultimate toolkit for <br/>professional growth
-              </h2>
-              <p className="text-lg text-gray-500 dark:text-gray-400">
-                We provide the infrastructure so you can focus on building meaningful business relationships.
-              </p>
-            </div>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-10">
-            <Card 
-              title="Business Profiles" 
-              subtitle="Verified Presence"
-              className="p-6"
-            >
-              <div className="mb-4 w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+    <main className="min-h-screen bg-white dark:bg-gray-950">
+      <LandingNavbar />
+      <Hero />
+      <section id="features" className="py-20 lg:py-32 bg-gray-50 dark:bg-gray-900/50">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <h2 className="text-4xl font-black mb-16">The Future of <span className="text-primary-600">B2B Networking</span></h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { icon: Zap, title: "AI Insights", text: "Predictive trends and smart matching algorithms built-in." },
+              { icon: Target, title: "Promotion Engine", text: "Reach verified businesses with targeted ad credits." },
+              { icon: MessageSquare, title: "Real-time Messaging", text: "Enterprise-grade secure chat and document sharing." }
+            ].map((f, i) => (
+              <div key={i} className="p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border dark:border-gray-800 text-left">
+                <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center text-primary-600 mb-6">
+                  <f.icon />
+                </div>
+                <h3 className="text-xl font-bold mb-4">{f.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400">{f.text}</p>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 leading-relaxed mt-4">Showcase your services with high-fidelity profiles, track your reputation points, and earn industry verification badges.</p>
-            </Card>
-            <Card 
-              title="Smart Communities" 
-              subtitle="Industry Circles"
-              className="p-6"
-            >
-              <div className="mb-4 w-16 h-16 rounded-2xl bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center">
-                <svg className="w-8 h-8 text-secondary-600 dark:text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 leading-relaxed mt-4">Join specialized groups optimized with AI to match you with peers, knowledge bases, and collaborative projects.</p>
-            </Card>
-            <Card 
-              title="Real-time Insights" 
-              subtitle="AI Analytics"
-              className="p-6"
-            >
-              <div className="mb-4 w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
-                <svg className="w-8 h-8 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <p className="text-gray-500 dark:text-gray-400 leading-relaxed mt-4">Stay ahead with live trend predictions, sentiment analysis, and personalized strategy recommendations.</p>
-            </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Image Showcase Section */}
-      <section className="py-24 bg-white dark:bg-gray-950">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl lg:text-5xl font-bold font-heading mb-6 tracking-tight text-gray-900 dark:text-gray-100">
-                Connect with Industry Leaders
-              </h2>
-              <p className="text-lg text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-                Build meaningful professional relationships, discover new opportunities, and grow your network with our AI-powered platform designed for modern businesses.
-              </p>
-              <div className="space-y-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Global Network</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Connect with professionals from over 50+ countries worldwide</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-secondary-100 dark:bg-secondary-900/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-secondary-600 dark:text-secondary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">AI-Powered Matching</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Smart algorithms help you find the right connections and opportunities</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-6 h-6 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-1">Secure & Verified</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Enterprise-grade security with verified business profiles</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-                <div className="aspect-[4/3] bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
-                  <div className="text-center p-8 text-white">
-                    <svg className="w-32 h-32 mx-auto mb-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <h3 className="text-2xl font-bold mb-2">Professional Network</h3>
-                    <p className="text-primary-100">Connecting businesses worldwide</p>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-secondary-500/20 rounded-full blur-3xl -z-10"></div>
-              <div className="absolute -top-6 -left-6 w-48 h-48 bg-primary-500/20 rounded-full blur-3xl -z-10"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24 bg-white dark:bg-gray-950 relative overflow-hidden">
-        <div className="container mx-auto px-6 text-center relative z-10">
-          <h2 className="text-4xl lg:text-6xl font-bold mb-8 text-gray-900 dark:text-gray-100">
-            Ready to revolutionize your <br/><span className="gradient-text">professional journey?</span>
-          </h2>
-          <p className="text-xl text-gray-500 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-            Join thousands of professionals already growing their network and business on our platform.
-          </p>
-          <Link href="/register">
-            <Button size="lg" className="px-12 py-6 text-lg rounded-2xl">
-              Create Your Free Account
-            </Button>
+      <section className="py-20 bg-primary-600 text-white text-center">
+        <div className="max-w-4xl mx-auto px-4">
+          <h2 className="text-4xl font-black mb-8">Ready to grow your network?</h2>
+          <p className="text-xl mb-10 opacity-90">Join 10,000+ businesses scaling their connections every day.</p>
+          <Link href="/register" className="px-10 py-5 bg-white text-primary-600 font-black text-xl rounded-2xl shadow-xl hover:scale-105 transition-transform inline-block">
+            Join BusinessNet Now
           </Link>
         </div>
       </section>
+
+      <footer className="py-12 border-t dark:border-gray-800 text-center text-gray-500">
+        <p>© {new Date().getFullYear()} BusinessNet. Built for the modern professional.</p>
+      </footer>
     </main>
   );
 }

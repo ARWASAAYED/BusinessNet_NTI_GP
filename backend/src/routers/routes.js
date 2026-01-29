@@ -13,6 +13,8 @@ const badgeController = require("../controllers/badgeController");
 const aiController = require("../controllers/aiController");
 const categoryController = require("../controllers/categoryController");
 const keywordController = require("../controllers/keywordController");
+const paymentController = require("../controllers/paymentController");
+const duelController = require("../controllers/duelController");
 const {
   uploadArray,
   uploadSingle,
@@ -81,8 +83,8 @@ router.post("/users/:id/follow", auth, userController.followUser);
 router.post("/users/:id/unfollow", auth, userController.unfollowUser);
 
 // Trend Routes
-router.get("/trends/topics", auth, trendController.getTrendingTopics);
-router.get("/trends/posts", auth, trendController.getTrendingPosts);
+router.get("/trends/topics", trendController.getTrendingTopics);
+router.get("/trends/posts", trendController.getTrendingPosts);
 
 // Business Routes
 router.get("/businesses/search", auth, businessController.searchBusinesses);
@@ -239,6 +241,7 @@ router.patch("/promotions/trends/:id/stop", auth, promotionController.stopTrendP
 router.get("/badges", auth, badgeController.getAllBadges);
 router.get("/badges/:id", auth, badgeController.getBadgeById);
 router.post("/badges", auth, badgeController.createBadge); // Admin only ideal
+router.get("/users/:userId/badges", auth, userController.getUserBadges);
 
 // AI Routes
 router.post("/ai/chat", auth, aiController.chatWithAI);
@@ -250,9 +253,19 @@ router.get("/categories/:id", auth, categoryController.getCategoryById);
 router.put("/categories/:id", auth, categoryController.updateCategory);
 router.delete("/categories/:id", auth, categoryController.deleteCategory);
 
+// Payment Routes
+router.post("/payments/create-intent", auth, paymentController.initializePayment);
+router.post("/payments/webhook", paymentController.handleWebhook);
+
 // Keyword Routes
 router.get("/keywords", auth, keywordController.getAllKeywords);
 router.get("/keywords/:id", auth, keywordController.getKeywordStats);
 router.put("/keywords/:id", auth, keywordController.updateKeywordStats);
+
+// Duel Routes
+router.post("/duels", auth, duelController.createDuel);
+router.get("/duels", auth, duelController.listDuels);
+router.post("/duels/:id/accept", auth, duelController.acceptDuel);
+router.post("/duels/:id/vote", auth, duelController.voteInDuel);
 
 module.exports = router;

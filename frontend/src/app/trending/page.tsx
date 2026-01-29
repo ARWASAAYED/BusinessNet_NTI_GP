@@ -186,19 +186,34 @@ export default function TrendingPage() {
                       }`}>
                         {index + 1}
                       </div>
-                      <span className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
-                        #{topic.name}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
+                          #{topic.name}
+                        </span>
+                        {topic.pulse && (
+                          <div className="flex items-center gap-2 text-[9px] font-bold text-gray-400 uppercase tracking-tighter">
+                            <span>H: <span className="text-gray-600 dark:text-gray-400 font-black">{topic.pulse.high}</span></span>
+                            <span>L: <span className="text-gray-600 dark:text-gray-400 font-black">{topic.pulse.low}</span></span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-col items-end">
-                      <span className="text-xs font-black text-gray-400 dark:text-gray-500">
-                        {(topic.count / 1000).toFixed(1)}K
-                      </span>
-                      {topic.growth && (
-                        <span className={`text-[10px] font-bold ${topic.growth >= 0 ? 'text-success-500' : 'text-error-500'}`}>
-                          {topic.growth > 0 ? '+' : ''}{topic.growth}%
-                        </span>
-                      )}
+                       <div className="flex items-center gap-1.5">
+                          <span className="text-xs font-black text-gray-900 dark:text-gray-100">
+                            {topic.count}
+                          </span>
+                          {topic.growth !== undefined && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-black ${
+                              topic.growth >= 0 
+                                ? 'bg-success-500/10 text-success-500' 
+                                : 'bg-error-500/10 text-error-500'
+                            }`}>
+                              {topic.growth > 0 ? '▲' : '▼'} {Math.abs(topic.growth)}%
+                            </span>
+                          )}
+                       </div>
+                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] mt-1">Activity Index</p>
                     </div>
                   </motion.div>
                 ))}

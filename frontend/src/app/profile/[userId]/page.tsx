@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { MapPin, Link as LinkIcon, Calendar, MessageCircle } from "lucide-react";
+import { MapPin, Link as LinkIcon, Calendar, MessageCircle, Swords } from "lucide-react";
 import Avatar from "@/components/common/Avatar";
 import Button from "@/components/common/Button";
 import Card from "@/components/common/Card";
@@ -13,6 +13,7 @@ import userService, { User } from "@/services/userService";
 import postService from "@/services/postService";
 import messageService from "@/services/messageService";
 import { useAuth } from "@/hooks/useAuth";
+import DuelChallengeModal from "@/components/duel/DuelChallengeModal";
 
 export default function ProfilePage() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [isDuelModalOpen, setIsDuelModalOpen] = useState(false);
 
   const userId =
     (params?.userId as string) || currentUser?.id || currentUser?._id;
@@ -143,15 +145,24 @@ export default function ProfilePage() {
                 </div>
 
                 {!isOwnProfile && currentUser && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       variant={isFollowing ? "outline" : "primary"}
                       onClick={handleFollow}
+                      className="px-6"
                     >
                       {isFollowing ? "Following" : "Follow"}
                     </Button>
                     <Button
                       variant="secondary"
+                      onClick={() => setIsDuelModalOpen(true)}
+                      className="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white border-none"
+                    >
+                      <Swords className="w-4 h-4" />
+                      Duel
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={handleMessage}
                       className="flex items-center gap-2"
                     >
@@ -197,6 +208,48 @@ export default function ProfilePage() {
                 </div>
               </div>
 
+              {/* Achievements/Badges */}
+              {user.badges && user.badges.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-3">Professional Achievements</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {user.badges.map((badge: any) => (
+                      <div 
+                        key={badge._id} 
+                        className="group relative flex items-center gap-2 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-2 pr-4 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all cursor-default"
+                        title={badge.description}
+                      >
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl shadow-inner
+                          ${badge.rarity === 'common' ? 'bg-gray-100 dark:bg-gray-800' : 
+                            badge.rarity === 'rare' ? 'bg-blue-100 dark:bg-blue-900/30' : 
+                            badge.rarity === 'epic' ? 'bg-purple-100 dark:bg-purple-900/30' : 
+                            'bg-amber-100 dark:bg-amber-900/30'}`}
+                        >
+                          {badge.imageUrl || '🏆'}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-900 dark:text-gray-100">{badge.name}</p>
+                          <p className={`text-[10px] font-black uppercase tracking-tighter
+                            ${badge.rarity === 'common' ? 'text-gray-400' : 
+                              badge.rarity === 'rare' ? 'text-blue-500' : 
+                              badge.rarity === 'epic' ? 'text-purple-500' : 
+                              'text-amber-500'}`}
+                          >
+                            {badge.rarity}
+                          </p>
+                        </div>
+                        
+                        {/* Tooltip on hover */}
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-gray-900 text-white text-[10px] rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 text-center">
+                          {badge.description}
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Additional Info */}
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 {user.location && (
@@ -237,6 +290,14 @@ export default function ProfilePage() {
         </h2>
         <PostList posts={posts} isLoading={isLoadingPosts} />
       </div>
+
+      {user && (
+        <DuelChallengeModal 
+          opponent={user}
+          isOpen={isDuelModalOpen}
+          onClose={() => setIsDuelModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

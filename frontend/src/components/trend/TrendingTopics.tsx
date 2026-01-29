@@ -110,25 +110,33 @@ export default function TrendingTopics() {
                         {Math.abs(tag.growth)}%
                       </div>
                     )}
-                    <span className="text-[10px] font-black text-gray-400 dark:text-gray-500 tabular-nums">
-                      {(tag.count / 1000).toFixed(1)}K
-                    </span>
                   </div>
                 </div>
                 
-                {tag.isPromoted ? (
-                  <p className="text-[10px] text-primary-600/60 dark:text-primary-400/60 font-medium">
-                    Promoted by Partner
-                  </p>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 flex-1 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min((tag.count / 600) * 100, 100)}%` }}
-                        className="h-full bg-gradient-to-r from-primary-500 via-primary-600 to-primary-700 shadow-sm"
-                      />
+                <div className="flex items-center justify-between mt-1">
+                  {tag.pulse ? (
+                    <div className="flex items-center gap-2 text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter">
+                       <span>H: <span className="text-gray-900 dark:text-gray-100">{tag.pulse.high}</span></span>
+                       <span>L: <span className="text-gray-900 dark:text-gray-100">{tag.pulse.low}</span></span>
+                       <span className="ml-1 opacity-40">VOL: {tag.pulse.volume}</span>
                     </div>
+                  ) : (
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+                      {tag.isPromoted ? 'Promoted Partner' : 'Market Insight'}
+                    </p>
+                  )}
+                  <span className="text-[10px] font-black text-gray-900 dark:text-gray-100 tabular-nums bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                    {tag.count}
+                  </span>
+                </div>
+                
+                {!tag.isPromoted && (
+                  <div className="mt-2 h-1 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden opacity-30 group-hover:opacity-100 transition-opacity">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min((tag.count / 300) * 100, 100)}%` }}
+                      className="h-full bg-primary-500"
+                    />
                   </div>
                 )}
               </motion.div>

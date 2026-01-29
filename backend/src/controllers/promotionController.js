@@ -1,7 +1,7 @@
 const Promotion = require("../models/promotion");
 const Post = require("../models/post");
 const PromotedTrend = require('../models/promotedTrend');
-const Trend = require('../models/Trend');
+const Trend = require('../models/trend');
 
 exports.createPromotion = async (req, res) => {
   try {

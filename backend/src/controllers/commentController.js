@@ -1,6 +1,7 @@
 const Comment = require("../models/comment");
 const Post = require("../models/post");
 const Notification = require("../models/notification");
+const badgeService = require("../services/badgeService");
 
 exports.createComment = async (req, res) => {
   try {
@@ -70,6 +71,10 @@ exports.createComment = async (req, res) => {
       "author",
       "username fullName avatarUrl"
     );
+
+    // Check and award badges
+    const io = req.app.get("io");
+    await badgeService.checkAndAwardBadges(req.user._id || req.user.id, io);
 
     res.status(201).json({
       success: true,

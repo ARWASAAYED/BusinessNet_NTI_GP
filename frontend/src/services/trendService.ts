@@ -8,6 +8,11 @@ export interface TrendingTopic {
   promotionLabel?: string;
   category?: 'General' | 'Technology' | 'Business' | 'Finance' | 'Design';
   growth?: number; // percentage growth in last 24h
+  pulse?: {
+    high: number;
+    low: number;
+    volume: number;
+  };
 }
 
 const trendService = {

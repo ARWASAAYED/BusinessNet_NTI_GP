@@ -9,6 +9,7 @@ import { useFeed } from '@/hooks/useFeed';
 import postService from '@/services/postService';
 import TrendingTopics from '@/components/trend/TrendingTopics';
 import SuggestedBusiness from '@/components/business/SuggestedBusiness';
+import DuelList from '@/components/duel/DuelList';
 
 export default function FeedPage() {
   const router = useRouter();
@@ -69,6 +70,7 @@ export default function FeedPage() {
         {/* Main Feed - Expanded for better focus */}
         <main className="lg:col-span-8 space-y-6">
           <PostCreate onSubmit={handleCreatePost} />
+          
           <PostList
             posts={posts}
             isLoading={isLoading}

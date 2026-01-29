@@ -316,7 +316,7 @@ exports.getPosts = async (req, res, next) => {
       .populate("authorId", "username fullName avatarUrl accountType")
       .populate("businessId", "name avatarUrl")
       .populate("categoryId", "name")
-      .sort({ createdAt: -1 })
+      .sort({ isPromoted: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit);
 

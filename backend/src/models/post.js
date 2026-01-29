@@ -42,6 +42,8 @@ const postSchema = new mongoose.Schema(
     relevanceScore: { type: Number, default: 0 }, // 0 to 100
     trendScore: { type: Number, default: 0 },
     isTrending: { type: Boolean, default: false },
+    isPromoted: { type: Boolean, default: false },
+    promotedUntil: { type: Date },
     aiKeywords: [String],
   },
   { timestamps: true }

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Users, Building2, MessageSquare, TrendingUp, Settings, Bell, Megaphone, PlusCircle } from 'lucide-react';
+import { Home, Users, Building2, MessageSquare, TrendingUp, Settings, Bell, Megaphone, PlusCircle, Swords } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -38,7 +38,8 @@ const Sidebar = () => {
     { href: '/communities', label: 'Communities', icon: Users },
     { href: '/business', label: 'Business', icon: Building2 },
     { href: '/promotions', label: 'Promotions', icon: Megaphone },
-    {href:'/trending',label:'Trending',icon:TrendingUp},
+    { href: '/trending', label: 'Trending', icon: TrendingUp },
+    { href: '/battles', label: 'Battles', icon: Swords },
     { href: '/messages', label: 'Messages', icon: MessageSquare, badge: 0 },
     { href: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
 

@@ -342,6 +342,10 @@ exports.followUser = async (req, res, next) => {
       io.to(userToFollow._id.toString()).emit("notification", notification);
     }
 
+    // Check and award follower badges for the user being followed
+    const badgeService = require("../services/badgeService");
+    await badgeService.checkAndAwardBadges(userToFollow._id, io);
+
     res.json({
       success: true,
       message: "User followed successfully",
@@ -373,6 +377,39 @@ exports.unfollowUser = async (req, res, next) => {
     res.json({
       success: true,
       message: "User unfollowed successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get user's earned badges
+exports.getUserBadges = async (req, res, next) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid User ID format" 
+      });
+    }
+
+    const user = await User.findById(userId).populate('badges');
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Format badges with earned timestamp
+    const userBadges = (user.badges || []).map(badge => ({
+      ...badge.toObject(),
+      earnedAt: badge.createdAt || new Date(), // Use badge creation as fallback
+    }));
+
+    res.json({
+      success: true,
+      data: userBadges,
     });
   } catch (error) {
     next(error);
