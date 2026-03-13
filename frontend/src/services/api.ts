@@ -18,22 +18,25 @@ if (USE_MOCK) {
 
     let data: any = null;
 
-    if (config.url?.includes('/auth/login')) {
-      data = { 
-        success: true, 
-        data: { 
-          token: "mock-jwt-token-123", 
-          user: MOCK_DATA.MOCK_USERS[0] 
-        } 
-      };
-    } else if (config.url?.includes('/posts')) {
+    if (config.url?.includes('/posts')) {
       data = { success: true, data: { posts: MOCK_DATA.MOCK_POSTS, hasMore: false } };
     } else if (config.url?.includes('/communities')) {
       data = { success: true, data: { communities: MOCK_DATA.MOCK_COMMUNITIES } };
     } else if (config.url?.includes('/trends')) {
       data = { success: true, data: MOCK_DATA.MOCK_TRENDS };
-    } else if (config.url?.includes('/auth/me') || config.url?.includes('/users/me')) {
+    } else if (config.url?.includes('/auth/login') || config.url?.includes('/auth/register')) {
+      data = { 
+        success: true, 
+        token: 'mock-jwt-token',
+        user: MOCK_DATA.MOCK_USERS[0]
+      };
+    } else if (config.url?.includes('/users/me') || config.url?.includes('/auth/me')) {
       data = { success: true, data: MOCK_DATA.MOCK_USERS[0] };
+    } else if (config.url?.includes('/users/')) {
+      // Mock profile search by ID
+      const id = config.url.split('/').pop();
+      const user = MOCK_DATA.MOCK_USERS.find(u => u.id === id || u._id === id) || MOCK_DATA.MOCK_USERS[0];
+      data = { success: true, data: user };
     } else {
       data = { success: true, data: [] };
     }

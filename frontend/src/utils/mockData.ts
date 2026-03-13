@@ -1,8 +1,8 @@
 export const MOCK_USERS = [
-  { id: "1", fullName: "Ahmed Hassan", username: "ahmed_h", email: "ahmed@demo.com", bio: "Full-stack developer & open-source enthusiast", location: "Cairo, Egypt", accountType: "personal", role: "user", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed" },
-  { id: "2", fullName: "Sara Mohamed", username: "sara_m", email: "sara@demo.com", bio: "UX Designer | Making the web beautiful", location: "Alexandria, Egypt", accountType: "personal", role: "user", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sara" },
-  { id: "3", fullName: "Omar Khalil", username: "omar_k", email: "omar@demo.com", bio: "Data Scientist | AI Researcher", location: "Dubai, UAE", accountType: "personal", role: "user", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Omar" },
-  { id: "4", fullName: "TechVenture Admin", username: "techventure", email: "admin@techventure.com", bio: "Leading tech startup incubator", location: "Cairo, Egypt", accountType: "business", role: "business", avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=TechVenture" },
+  { id: "1", _id: "1", fullName: "Ahmed Hassan", username: "ahmed_h", email: "ahmed@demo.com", bio: "Full-stack developer & open-source enthusiast", location: "Cairo, Egypt", accountType: "personal", role: "user", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmed" },
+  { id: "2", _id: "2", fullName: "Sara Mohamed", username: "sara_m", email: "sara@demo.com", bio: "UX Designer | Making the web beautiful", location: "Alexandria, Egypt", accountType: "personal", role: "user", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sara" },
+  { id: "3", _id: "3", fullName: "Omar Khalil", username: "omar_k", email: "omar@demo.com", bio: "Data Scientist | AI Researcher", location: "Dubai, UAE", accountType: "personal", role: "user", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Omar" },
+  { id: "4", _id: "4", fullName: "TechVenture Admin", username: "techventure", email: "admin@techventure.com", bio: "Leading tech startup incubator", location: "Cairo, Egypt", accountType: "business", role: "business", avatar: "https://api.dicebear.com/7.x/identicon/svg?seed=TechVenture" },
 ];
 
 export const MOCK_POSTS = [
