@@ -152,7 +152,7 @@ const extractAndUpsertHashtags = async (content, postId = null, aiAnalysis = {},
         try {
             let trend = await Trend.findOne({ keywordId });
             const sentiment = aiAnalysis.sentimentScore || 0;
-            const professionalism = aiAnalysis.professionalismScore || 0;
+            const professionalism = 80; // Baseline professionalism since AI score is removed
             
             // Score Calculation: Frequency + Professionalism factor + Sentiment factor
             const scoreIncrement = 1 + (professionalism / 100) + Math.abs(sentiment);
@@ -252,7 +252,6 @@ exports.createPost = async (req, res, next) => {
       businessId: targetBusinessId,
       communityId: targetCommunityId,
       sentimentScore: aiAnalysis.sentimentScore,
-      professionalismScore: aiAnalysis.professionalismScore,
       authenticityScore: aiAnalysis.authenticityScore,
       relevanceScore: aiAnalysis.relevanceScore,
       aiKeywords: aiAnalysis.aiKeywords,
@@ -1001,7 +1000,6 @@ exports.updatePost = async (req, res, next) => {
     if (content) {
       const aiAnalysis = await aiService.analyzeContent(content);
       post.sentimentScore = aiAnalysis.sentimentScore;
-      post.professionalismScore = aiAnalysis.professionalismScore;
       post.authenticityScore = aiAnalysis.authenticityScore;
       post.relevanceScore = aiAnalysis.relevanceScore;
       post.aiKeywords = aiAnalysis.aiKeywords;

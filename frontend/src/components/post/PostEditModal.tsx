@@ -62,7 +62,7 @@ const PostEditModal: React.FC<PostEditModalProps> = ({ post, isOpen, onClose, on
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full bg-transparent border-none focus:ring-0 text-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 resize-none min-h-[150px]"
+            className="w-full bg-transparent border-none focus:ring-0 text-lg text-gray-900 dark:text-gray-900 placeholder:text-gray-500 dark:placeholder:text-gray-400 resize-none min-h-[150px]"
           />
 
           <div className="space-y-3">

@@ -67,7 +67,7 @@ export default function TrendingTopics() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-12 gap-3">
           <Spinner size="sm" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 animate-pulse">Analyzing Pulse...</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 animate-pulse">Analyzing Trends...</span>
         </div>
       ) : (
         <div className="space-y-1">
@@ -114,15 +114,13 @@ export default function TrendingTopics() {
                 </div>
                 
                 <div className="flex items-center justify-between mt-1">
-                  {tag.pulse ? (
-                    <div className="flex items-center gap-2 text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-tighter">
-                       <span>H: <span className="text-gray-900 dark:text-gray-100">{tag.pulse.high}</span></span>
-                       <span>L: <span className="text-gray-900 dark:text-gray-100">{tag.pulse.low}</span></span>
-                       <span className="ml-1 opacity-40">VOL: {tag.pulse.volume}</span>
-                    </div>
+                  {tag.isPromoted ? (
+                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
+                      Promoted Partner
+                    </p>
                   ) : (
                     <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">
-                      {tag.isPromoted ? 'Promoted Partner' : 'Market Insight'}
+                      Market Insight
                     </p>
                   )}
                   <span className="text-[10px] font-black text-gray-900 dark:text-gray-100 tabular-nums bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">

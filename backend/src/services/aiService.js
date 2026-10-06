@@ -9,7 +9,6 @@ const analyzeContent = async (content) => {
   if (!content || typeof content !== 'string' || content.trim() === '') {
     return {
       sentimentScore: 0,
-      professionalismScore: 50,
       authenticityScore: 0.8,
       relevanceScore: 0,
       aiKeywords: [],
@@ -19,22 +18,10 @@ const analyzeContent = async (content) => {
 
   // 1. Sentiment Analysis (-1 to 1)
   const positiveWords = [
-    "growth",
-    "innovation",
-    "success",
-    "trust",
-    "excellent",
-    "achieve",
-    "partnership",
+    "growth", "innovation", "success", "trust", "excellent", "achieve", "partnership"
   ];
   const negativeWords = [
-    "fail",
-    "crisis",
-    "risk",
-    "scam",
-    "poor",
-    "bad",
-    "warning",
+    "fail", "crisis", "risk", "scam", "poor", "bad", "warning"
   ];
 
   let sentiment = 0;
@@ -47,19 +34,7 @@ const analyzeContent = async (content) => {
 
   sentiment = Math.max(-1, Math.min(1, sentiment));
 
-  // 2. Professionalism Score (0-100)
-  // Penalize for excessive caps, slang, or emojis (slang is subjective, we'll use patterns)
-  let professionalism = 80; // Baseline
-
-  if (content === content.toUpperCase() && content.length > 10)
-    professionalism -= 30;
-  if ((content.match(/!/g) || []).length > 2) professionalism -= 10;
-  if (/ (omg|lol|idk|btw) /i.test(content)) professionalism -= 20;
-  if (content.length < 20) professionalism -= 10;
-
-  professionalism = Math.max(0, Math.min(100, professionalism));
-
-  // 3. Relevance & Keywords
+  // 2. Relevance & Keywords
   const industries = {
     Technology: ["ai", "software", "digital", "cloud", "devops", "tech"],
     Finance: ["investment", "capital", "market", "stock", "banking"],
@@ -79,18 +54,17 @@ const analyzeContent = async (content) => {
     keywords = [...keywords, ...matches];
   });
 
-  // 4. Authenticity Score (0-1)
-  // Higher if it doesn't look like spam/copy-paste
+  // 3. Authenticity Score (0-1)
   const authenticity = content.length > 100 ? 0.95 : 0.8;
 
   return {
     sentimentScore: sentiment,
-    professionalismScore: professionalism,
     authenticityScore: authenticity,
     relevanceScore: Math.min(100, maxMatches * 25),
     aiKeywords: Array.from(new Set(keywords)),
     detectedIndustry,
   };
+
 };
 
 // Simple reply generator — in production integrate with real LLM

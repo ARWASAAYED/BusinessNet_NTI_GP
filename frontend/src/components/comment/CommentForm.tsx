@@ -56,8 +56,8 @@ const CommentForm: React.FC<CommentFormProps> = ({
       <div
         className={`relative rounded-lg border-2 transition-all duration-200 ${
           isFocused
-            ? 'border-primary-500 ring-4 ring-primary-100'
-            : 'border-gray-200'
+            ? 'border-primary-500 ring-4 ring-primary-100 dark:ring-primary-900/30'
+            : 'border-gray-200 dark:border-gray-800'
         }`}
       >
         <textarea
@@ -69,7 +69,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           rows={1}
-          className="w-full px-4 py-3 rounded-lg resize-none focus:outline-none bg-transparent"
+          className="w-full px-4 py-3 rounded-lg resize-none focus:outline-none bg-transparent text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
           style={{ minHeight: '44px', maxHeight: '200px' }}
         />
       </div>

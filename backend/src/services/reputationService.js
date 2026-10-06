@@ -1,5 +1,5 @@
 const Business = require('../models/business');
-const Post = require('../models/Post');
+const Post = require('../models/post');
 
 /**
  * Recalculates business reputation metrics based on activity and AI feedback.
@@ -20,7 +20,7 @@ const updateBusinessMetrics = async (businessId) => {
         const engagementRate = totalImpressions > 0 ? (totalEngagements / totalImpressions) * 100 : 0;
 
         // 2. Trust Score (Based on Sentiment and Professionalism)
-        const avgProfessionalism = posts.reduce((sum, p) => sum + (p.professionalismScore || 0), 0) / posts.length;
+        const avgProfessionalism = 80; // Baseline professionalism since individual scores are removed
         const avgSentiment = posts.reduce((sum, p) => sum + (p.sentimentScore || 0), 0) / posts.length;
         // Sentiment is -1 to 1, map to 0-100
         const trustScore = (avgProfessionalism * 0.7) + (((avgSentiment + 1) * 50) * 0.3);

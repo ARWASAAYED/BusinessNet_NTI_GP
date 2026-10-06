@@ -34,7 +34,7 @@ export default function MarketTicker() {
       
       <div className="shrink-0 px-4 border-r border-gray-100 dark:border-gray-800 flex items-center gap-2 z-30 bg-white dark:bg-gray-950">
          <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Live Pulse</span>
+         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">Trending Now</span>
       </div>
 
       <motion.div 

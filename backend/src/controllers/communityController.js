@@ -296,7 +296,7 @@ exports.updateCommunity = async (req, res, next) => {
     const updatedCommunity = await Community.findByIdAndUpdate(
       req.params.id,
       updates,
-      { new: true }
+      { returnDocument: "after" }
     ).populate("creatorId", "fullName username avatarUrl");
 
     const communityData = updatedCommunity.toObject();
@@ -476,7 +476,7 @@ exports.updateMemberRole = async (req, res, next) => {
     const member = await CommunityMember.findOneAndUpdate(
       { communityId: id, userId },
       { role },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!member) return res.status(404).json({ message: "Member not found" });

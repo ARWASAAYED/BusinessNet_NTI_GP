@@ -107,6 +107,10 @@
     --info-500: 188.7 94.5% 42.7%;
     --info-600: 191.6 91.4% 36.5%;
     --info-700: 192.9 82.3% 31.4%;
+    
+    /* Accent Colors - Indigo for Business */
+    --accent-50: 226 100% 97%;
+    --accent-500: 239 84.1% 66.7%;
 
     --radius: 1rem;
     --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.05), 0 5px 20px -5px rgba(0, 0, 0, 0.02);
@@ -181,7 +185,11 @@
   }
 
   .gradient-bg-primary {
-    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-indigo-700;
+    @apply bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800;
+  }
+
+  .gradient-bg-accent {
+    @apply bg-gradient-to-br from-accent-500 via-accent-500 to-primary-700;
   }
 
   .gradient-text {

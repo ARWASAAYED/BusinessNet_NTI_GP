@@ -160,6 +160,7 @@ const LoginForm = () => {
               {t('auth.createFree')}
             </Link>
           </p>
+
         </form>
       </div>
     </motion.div>
