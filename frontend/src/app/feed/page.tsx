@@ -8,7 +8,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useFeed } from '@/hooks/useFeed';
 import postService from '@/services/postService';
 import TrendingTopics from '@/components/trend/TrendingTopics';
-import SuggestedBusiness from '@/components/business/SuggestedBusiness';
 import DuelList from '@/components/duel/DuelList';
 import NetworkUpdates from '@/components/layout/NetworkUpdates';
 import { useToast } from '@/app/providers';
@@ -113,7 +112,6 @@ export default function FeedPage() {
           <TrendingTopics />
           <DuelList limit={1} showTabs={false} />
           <NetworkUpdates />
-          <SuggestedBusiness />
         </aside>
       </div>
     </div>

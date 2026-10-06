@@ -489,10 +489,21 @@
   },
   "news": {
     "title": "Platform News",
+    "platformNews": "Platform News",
     "subtitle": "Stay updated with the latest features, engine upgrades, and community milestones across MADA.",
     "readMore": "Read Full Article",
     "subscribe": "Subscribe to Network Pulse",
-    "subscribeDesc": "Get the latest professional updates and market trends delivered straight to your inbox."
+    "subscribeDesc": "Get the latest professional updates and market trends delivered straight to your inbox.",
+    "industryBattles": "Industry Battles Live",
+    "industryBattlesDesc": "Challenge professionals and dominate the leaderboard.",
+    "audienceAnalytics": "Audience Analytics",
+    "audienceAnalyticsDesc": "Get deeper reach and impression metrics on your posts.",
+    "realtimePulse": "Real-time Pulse",
+    "realtimePulseDesc": "Never miss a trending keyword in your industry.",
+    "viewChangelog": "VIEW CHANGELOG",
+    "changelogModalTitle": "System Changelog & Architecture",
+    "changelogModalDesc": "Live tracker of recent deployments, performance upgrades, and feature releases on MADA.",
+    "gotIt": "Got It"
   },
   "settings": {
     "title": "Account Settings",
