@@ -45,3 +45,7 @@ uploads/
 # Misc
 *.log
 *.tmp
+mongo-data/
+query
+backend/error.txt
+backend/error_cmd.txt

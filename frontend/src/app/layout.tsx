@@ -3,6 +3,7 @@ import { Inter, Poppins, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { NotificationProvider } from "@/components/notification/NotificationProvider";
+import { LanguageProvider } from "@/components/layout/LanguageProvider";
 
 const inter = Inter({
   variable: "--font-primary",
@@ -21,8 +22,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Business Social Network",
-  description: "Connect, share, and grow your business.",
+  title: "MADA | شبكة الأعمال والمهنيين الموثّقة",
+  description: "MADA - The Premier Verified Business & Professional Network. Connect, collaborate, and scale your enterprise.",
 };
 
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
@@ -35,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" dir="ltr" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} ${jetbrainsMono.variable} antialiased min-h-screen relative`}>
         {/* Animated Background Mesh */}
         <div className="bg-mesh">
@@ -43,15 +44,17 @@ export default function RootLayout({
         </div>
 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Providers>
-            <PopupProvider>
-              <NotificationProvider>
-                <ClientLayout>
-                  {children}
-                </ClientLayout>
-              </NotificationProvider>
-            </PopupProvider>
-          </Providers>
+          <LanguageProvider>
+            <Providers>
+              <PopupProvider>
+                <NotificationProvider>
+                  <ClientLayout>
+                    {children}
+                  </ClientLayout>
+                </NotificationProvider>
+              </PopupProvider>
+            </Providers>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

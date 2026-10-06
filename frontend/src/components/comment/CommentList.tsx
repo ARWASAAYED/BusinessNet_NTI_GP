@@ -10,6 +10,7 @@ import Spinner from "../common/Spinner";
 import commentService, { Comment } from "@/services/commentService";
 import { useAuth } from "@/hooks/useAuth";
 import { useComments } from "@/hooks/useComments";
+import { useToast } from "@/app/providers";
 
 interface CommentListProps {
   postId: string;
@@ -28,43 +29,56 @@ const CommentList: React.FC<CommentListProps> = ({ postId }) => {
     refreshComments,
   } = useComments(postId);
 
+  const { showToast } = useToast();
+
   const handleCreateComment = async (content: string) => {
     try {
       await createComment(content);
+      showToast(user ? "Comment posted!" : "Comment posted as Guest!", "success");
     } catch (err: any) {
       console.error("Failed to create comment:", err);
+      showToast(err.message || "Failed to create comment", "error");
     }
   };
 
   const handleReply = async (parentId: string, content: string) => {
     try {
       await createComment(content, parentId);
+      showToast(user ? "Reply posted!" : "Reply posted as Guest!", "success");
     } catch (err: any) {
       console.error("Failed to create reply:", err);
+      showToast(err.message || "Failed to create reply", "error");
     }
   };
 
   const handleEdit = async (commentId: string, content: string) => {
     try {
       await commentService.updateComment(commentId, { content });
-      // useComments will update via socket or we could manually refresh
+      showToast("Comment updated", "success");
     } catch (err: any) {
       console.error("Failed to update comment:", err);
+      showToast(err.message || "Failed to update comment", "error");
     }
   };
 
   const handleDelete = async (commentId: string) => {
     try {
       await deleteComment(commentId);
+      showToast("Comment deleted", "success");
     } catch (err: any) {
       console.error("Failed to delete comment:", err);
+      showToast(err.message || "Failed to delete comment", "error");
     }
   };
 
   const handleLike = async (commentId: string) => {
+    if (!user) {
+      showToast("Sign in to like comments", "info");
+      return;
+    }
     try {
       const comment = comments.find((c) => c._id === commentId);
-      if (!comment || !user) return;
+      if (!comment) return;
 
       const userId = user.id || user._id || "";
       const likes = comment.likes ?? [];
@@ -113,15 +127,13 @@ const CommentList: React.FC<CommentListProps> = ({ postId }) => {
       </div>
 
       {/* Comment Form */}
-      {user && (
-        <div className="pb-4 border-b border-gray-200 dark:border-gray-800">
-          <CommentForm
-            onSubmit={handleCreateComment}
-            placeholder="Write a comment..."
-            submitLabel="Comment"
-          />
-        </div>
-      )}
+      <div className="pb-4 border-b border-gray-200 dark:border-gray-800">
+        <CommentForm
+          onSubmit={handleCreateComment}
+          placeholder={user ? "Write a comment..." : "Comment as Guest (or Sign in to join the conversation)..."}
+          submitLabel="Comment"
+        />
+      </div>
 
       {/* Comments List */}
       <AnimatePresence>

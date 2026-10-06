@@ -178,11 +178,19 @@ exports.getPromotionAnalytics = async (req, res) => {
 
 exports.pausePromotion = async (req, res) => {
   try {
-    const promotion = await Promotion.findByIdAndUpdate(
-      req.params.id,
-      { status: 'paused' },
-      { new: true }
-    );
+    const promotion = await Promotion.findById(req.params.id);
+    if (!promotion) {
+      return res.status(404).json({ success: false, message: "Promotion not found" });
+    }
+
+    promotion.status = 'paused';
+    await promotion.save();
+
+    // Remove isPromoted flag from post while paused
+    if (promotion.postId) {
+      await Post.findByIdAndUpdate(promotion.postId, { isPromoted: false });
+    }
+
     res.status(200).json({ success: true, data: promotion });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -191,11 +199,35 @@ exports.pausePromotion = async (req, res) => {
 
 exports.resumePromotion = async (req, res) => {
   try {
-    const promotion = await Promotion.findByIdAndUpdate(
-      req.params.id,
-      { status: 'active' },
-      { new: true }
-    );
+    const promotion = await Promotion.findById(req.params.id);
+    if (!promotion) {
+      return res.status(404).json({ success: false, message: "Promotion not found" });
+    }
+
+    // Check if expired or budget exhausted
+    const isExpired = new Date(promotion.endDate) <= new Date();
+    const isBudgetExhausted = (promotion.spent || 0) >= (promotion.budget || 0);
+
+    if (isExpired || isBudgetExhausted) {
+      promotion.status = 'completed';
+      await promotion.save();
+      if (promotion.postId) {
+        await Post.findByIdAndUpdate(promotion.postId, { isPromoted: false });
+      }
+      return res.status(400).json({ 
+        success: false, 
+        message: isExpired ? "Promotion duration has already ended" : "Promotion budget has been completely spent" 
+      });
+    }
+
+    promotion.status = 'active';
+    await promotion.save();
+
+    // Re-enable isPromoted flag on post
+    if (promotion.postId) {
+      await Post.findByIdAndUpdate(promotion.postId, { isPromoted: true });
+    }
+
     res.status(200).json({ success: true, data: promotion });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

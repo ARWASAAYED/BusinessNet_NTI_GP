@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import {
   Send,
   Image as ImageIcon,
@@ -8,6 +9,7 @@ import {
   User,
   MoreVertical,
   Trash2,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCommunityMessages } from "@/hooks/useCommunityMessages";
@@ -16,6 +18,7 @@ import Avatar from "../common/Avatar";
 import Card from "../common/Card";
 import Spinner from "../common/Spinner";
 import { useToast } from "@/app/providers";
+import { useLanguage } from "@/components/layout/LanguageProvider";
 
 interface CommunityChatProps {
   communityId: string;
@@ -28,6 +31,7 @@ export default function CommunityChat({
 }: CommunityChatProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t, isRTL } = useLanguage();
   const { messages, isLoading, sendMessage, deleteMessage, summarizeCommunity } =
     useCommunityMessages(communityId);
   const [newMessage, setNewMessage] = useState("");
@@ -49,14 +53,21 @@ export default function CommunityChat({
     e.preventDefault();
     if (!newMessage.trim() && media.length === 0) return;
 
+    if (!user) {
+      showToast("Sign in to send messages in the community lounge", "info");
+      return;
+    }
+
     try {
       await sendMessage(newMessage, media, isAnnouncement);
       setNewMessage("");
       setMedia([]);
       setPreviews([]);
       setIsAnnouncement(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to send:", error);
+      const msg = error.response?.data?.message || error.message || "Failed to send message";
+      showToast(msg, "error");
     }
   };
 
@@ -91,43 +102,30 @@ export default function CommunityChat({
   return (
     <Card className="flex flex-col h-[600px] overflow-hidden rounded-[2rem] border-none shadow-premium bg-white dark:bg-gray-950">
       {/* Header */}
-      <div className="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/50">
+      <div className="p-3.5 sm:p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between bg-gray-50/50 dark:bg-gray-900/50">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-primary-500 rounded-xl text-white">
-            <Megaphone className="w-5 h-5" />
+          <div className="p-2 bg-primary-500 rounded-xl text-white shrink-0">
+            <Megaphone className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="font-black text-gray-900 dark:text-gray-100 tracking-tight">
-              Community Hub
+            <h3 className="font-black text-gray-900 dark:text-gray-100 tracking-tight text-sm sm:text-base">
+              {t('communities.communityHub')}
             </h3>
-            <p className="text-[10px] uppercase font-black tracking-widest text-gray-400">
-              Real-time collaboration
+            <p className="text-[9px] sm:text-[10px] uppercase font-black tracking-widest text-gray-400">
+              {t('communities.realTimeCollab')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={async () => {
-              try {
-                const res = await summarizeCommunity(50);
-                alert(res.summary);
-              } catch (err) {
-                console.error("Summarize failed", err);
-                alert("Failed to summarize messages");
-              }
-            }}
-            className="px-3 py-1 rounded-xl text-sm bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all"
-          >
-            AI Summary
-          </button>
-          <button className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition-all">
-            <MoreVertical className="w-5 h-5 text-gray-400" />
-          </button>
+          <span className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-xl text-[10px] sm:text-xs font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            {t('communities.liveSync')}
+          </span>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 space-y-4 sm:space-y-6 scrollbar-hide">
         {isLoading && messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-4">
             <Spinner size="md" />
@@ -158,7 +156,7 @@ export default function CommunityChat({
       </div>
 
       {/* Input Area */}
-      <div className="p-6 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-white/5">
+      <div className="p-3.5 sm:p-6 bg-gray-50/50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-white/5">
         <AnimatePresence>
           {previews.length > 0 && (
             <motion.div
@@ -186,56 +184,71 @@ export default function CommunityChat({
           )}
         </AnimatePresence>
 
-        <form onSubmit={handleSend} className="space-y-3">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={
-                isAnnouncement ? "Type announcement..." : "Type your message..."
-              }
-              className={`w-full bg-white dark:bg-gray-950 border-none rounded-2xl py-4 pl-4 pr-12 text-sm font-medium focus:ring-2 focus:ring-primary-500 transition-all ${
-                isAnnouncement ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
-              }`}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-            />
-            <button
-              type="submit"
-              className="absolute right-2 top-2 p-2 bg-primary-500 text-white rounded-xl hover:scale-105 transition-transform shadow-lg shadow-primary-500/30"
+        {!user ? (
+          <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-950 rounded-2xl border border-primary-200/80 dark:border-primary-800/80 shadow-sm">
+            <p className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+              Join this community or sign in to send messages and connect with members.
+            </p>
+            <Link
+              href="/login"
+              className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-primary-500/20 shrink-0 ms-3"
             >
-              <Send className="w-5 h-5" />
-            </button>
+              Sign In
+            </Link>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+        ) : (
+          <form onSubmit={handleSend} className="space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder={
+                  isAnnouncement ? t('communities.announcement') : t('communities.sendMessage')
+                }
+                dir="auto"
+                className={`w-full bg-white dark:bg-gray-950 border-none rounded-2xl py-3.5 sm:py-4 ps-4 pe-12 text-sm font-medium focus:ring-2 focus:ring-primary-500 transition-all ${
+                  isAnnouncement ? "bg-indigo-50 dark:bg-indigo-900/20" : ""
+                }`}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+              />
               <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-xl text-gray-400 hover:text-primary-500 transition-all"
+                type="submit"
+                className="absolute end-2 top-2 p-2 bg-primary-500 text-white rounded-xl hover:scale-105 transition-transform shadow-lg shadow-primary-500/30"
               >
-                <ImageIcon className="w-5 h-5" />
+                <Send className={`w-4 h-4 sm:w-5 sm:h-5 ${isRTL ? 'rotate-180' : ''}`} />
               </button>
-              {isAdmin && (
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsAnnouncement(!isAnnouncement)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                    isAnnouncement
-                      ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
-                      : "bg-white dark:bg-gray-800 text-gray-400 hover:text-indigo-500"
-                  }`}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-xl text-gray-400 hover:text-primary-500 transition-all"
                 >
-                  <Megaphone className="w-3 h-3" />
-                  Announcement
+                  <ImageIcon className="w-5 h-5" />
                 </button>
-              )}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAnnouncement(!isAnnouncement)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                      isAnnouncement
+                        ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30"
+                        : "bg-white dark:bg-gray-800 text-gray-400 hover:text-indigo-500"
+                    }`}
+                  >
+                    <Megaphone className="w-3 h-3" />
+                    {t('communities.announcement')}
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                {user?.username || 'Guest'}
+              </p>
             </div>
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-              {user?.username}
-            </p>
-          </div>
-        </form>
+          </form>
+        )}
         <input
           type="file"
           multiple

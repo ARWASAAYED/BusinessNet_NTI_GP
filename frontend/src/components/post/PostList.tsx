@@ -12,7 +12,7 @@ interface PostListProps {
   onDelete?: (postId: string) => void;
 }
 
-const PostList: React.FC<PostListProps> = ({ posts, isLoading, onLike, onDelete }) => {
+const PostList: React.FC<PostListProps> = ({ posts = [], isLoading, onLike, onDelete }) => {
   if (isLoading) {
     return (
       <div className="flex justify-center py-12">

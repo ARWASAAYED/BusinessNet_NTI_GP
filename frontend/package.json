@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "clean:next": "node ./scripts/clean-next.js",
+    "dev": "node ./scripts/clean-next.js && node --max-old-space-size=4096 ./node_modules/next/dist/bin/next dev",
+    "build": "node ./scripts/clean-next.js && node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build",
+    "start": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next start",
     "lint": "eslint"
   },
   "dependencies": {

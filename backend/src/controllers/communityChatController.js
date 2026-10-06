@@ -1,23 +1,39 @@
 const CommunityMessage = require("../models/CommunityMessage");
 const CommunityMember = require("../models/communityMember");
-const aiService = require("../services/aiService");
+const Community = require("../models/community");
 
 exports.getCommunityMessages = async (req, res, next) => {
   try {
-    const { communityId } = req.params;
+    const communityId = req.params.communityId || req.params.id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const skip = (page - 1) * limit;
 
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found" });
+    }
+
     // Verify membership
-    const isMember = await CommunityMember.findOne({
+    let isMember = await CommunityMember.findOne({
       communityId,
       userId: req.user._id,
     });
+
     if (!isMember) {
-      return res
-        .status(403)
-        .json({ message: "Only members can view messages" });
+      // Check if user is banned
+      if (community.bannedUsers && community.bannedUsers.some(b => b.toString() === req.user._id.toString())) {
+        return res.status(403).json({ message: "You are banned from this community" });
+      }
+
+      // Auto-join creator, moderator or member
+      const isCreator = community.creatorId && community.creatorId.toString() === req.user._id.toString();
+      const isMod = community.moderators && community.moderators.some(m => m.toString() === req.user._id.toString());
+      isMember = await CommunityMember.create({
+        communityId,
+        userId: req.user._id,
+        role: isCreator ? "admin" : isMod ? "moderator" : "member",
+      });
     }
 
     const messages = await CommunityMessage.find({ communityId })
@@ -40,25 +56,45 @@ exports.getCommunityMessages = async (req, res, next) => {
 
 exports.sendCommunityMessage = async (req, res, next) => {
   try {
-    const { communityId, content, isAnnouncement } = req.body;
+    // communityId comes from URL params (always reliable), fall back to body
+    const communityId = req.params.communityId || req.body.communityId;
+    const content = req.body.content || "";
+    const wantsAnnouncement = req.body.isAnnouncement === 'true' || req.body.isAnnouncement === true;
 
-    // Verify membership
-    const membership = await CommunityMember.findOne({
+    if (!communityId) {
+      return res.status(400).json({ message: "Community ID is required" });
+    }
+
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ message: "Community not found" });
+    }
+
+    // Check if user is banned
+    if (community.bannedUsers && community.bannedUsers.some(b => b.toString() === req.user._id.toString())) {
+      return res.status(403).json({ message: "You are banned from this community" });
+    }
+
+    // Verify or establish membership
+    let membership = await CommunityMember.findOne({
       communityId,
       userId: req.user._id,
     });
+
+    const isCreator = community.creatorId && community.creatorId.toString() === req.user._id.toString();
+    const isMod = community.moderators && community.moderators.some(m => m.toString() === req.user._id.toString());
+
     if (!membership) {
-      return res
-        .status(403)
-        .json({ message: "Only members can send messages" });
+      membership = await CommunityMember.create({
+        communityId,
+        userId: req.user._id,
+        role: isCreator ? "admin" : isMod ? "moderator" : "member",
+      });
     }
 
-    // If announcement, verify admin role
-    if (isAnnouncement && membership.role !== "admin") {
-      return res
-        .status(403)
-        .json({ message: "Only admins can make announcements" });
-    }
+    // Safe announcement check: only grant announcement if admin/moderator/creator
+    const canAnnounce = membership.role === "admin" || membership.role === "moderator" || isCreator || isMod;
+    const isAnnouncement = Boolean(wantsAnnouncement && canAnnounce);
 
     const media = [];
     if (req.files && req.files.length > 0) {
@@ -77,16 +113,6 @@ exports.sendCommunityMessage = async (req, res, next) => {
       media,
       isAnnouncement: isAnnouncement || false,
     });
-
-    // Run AI analysis on community message
-    try {
-      const analysis = await aiService.analyzeContent(content || "");
-      await CommunityMessage.findByIdAndUpdate(message._id, {
-        aiAnalysis: analysis,
-      });
-    } catch (aiErr) {
-      console.error("AI analysis failed for community message:", aiErr.message);
-    }
 
     const populatedMessage = await CommunityMessage.findById(
       message._id

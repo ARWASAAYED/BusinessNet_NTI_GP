@@ -77,6 +77,12 @@ export const useCommunityMessages = (communityId: string) => {
         media,
         isAnnouncement,
       });
+      if (newMessage) {
+        setMessages((prev) => {
+          if (prev.some((m) => m._id === newMessage._id)) return prev;
+          return [...prev, newMessage];
+        });
+      }
       return newMessage;
     } catch (error) {
       console.error("Failed to send community message:", error);

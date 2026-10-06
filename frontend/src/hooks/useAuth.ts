@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/authService';
 import { useRouter } from 'next/navigation';

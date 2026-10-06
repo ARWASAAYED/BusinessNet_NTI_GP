@@ -16,14 +16,19 @@ const { Server } = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: [
+// Allow comma-separated CORS_ORIGIN env var for production; fall back to localhost
+const allowedOrigins = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+  : [
       "http://localhost:3000",
       "http://localhost:3001",
       "http://127.0.0.1:3000",
       "http://192.168.8.155:3000",
-    ],
+    ];
+
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -44,12 +49,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://127.0.0.1:3000",
-      "http://192.168.8.155:3000",
-    ],
+    origin: allowedOrigins,
     credentials: true,
   })
 );
@@ -72,7 +72,7 @@ app.use("/api/v1", routes);
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: "Trendverse API is running",
+    message: "MADA API is running",
     timestamp: new Date(),
   });
 });
@@ -108,10 +108,14 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(
-    `Server running in ${
-      process.env.NODE_ENV || "development"
-    } mode on port http://localhost:${PORT}`
-  );
-});
+if (process.env.VERCEL !== '1') {
+  server.listen(PORT, () => {
+    console.log(
+      `Server running in ${
+        process.env.NODE_ENV || "development"
+      } mode on port http://localhost:${PORT}`
+    );
+  });
+}
+
+module.exports = app;

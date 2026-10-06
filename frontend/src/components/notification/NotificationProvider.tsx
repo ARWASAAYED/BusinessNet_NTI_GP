@@ -1,10 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useToast } from '@/app/providers';
-import { Notification } from '@/services/notificationService';
-import { useSocket } from '@/hooks/useSocket';
 
 interface NotificationContextType {
   unreadCount: number;
@@ -21,22 +18,7 @@ export const useNotificationContext = () => {
 };
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { unreadCount, addNotification } = useNotifications();
-  const { showToast } = useToast();
-  const { on, off } = useSocket();
-
-  useEffect(() => {
-    const handleNewNotification = (notification: Notification) => {
-      showToast(notification.message, 'info');
-      // No need to call addNotification here as useNotifications already does it
-    };
-
-    on('notification', handleNewNotification);
-
-    return () => {
-      off('notification', handleNewNotification);
-    };
-  }, [on, off, showToast]);
+  const { unreadCount } = useNotifications();
 
   return (
     <NotificationContext.Provider value={{ unreadCount }}>

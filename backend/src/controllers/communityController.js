@@ -325,13 +325,19 @@ exports.updateCommunity = async (req, res, next) => {
 // Search communities
 exports.searchCommunities = async (req, res, next) => {
   try {
-    const query = req.query.q || "";
-    const communities = await Community.find({
-      $or: [
-        { name: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } },
-      ],
-    }).populate("creatorId", "fullName username avatarUrl");
+    const rawQuery = req.query.q || "";
+    const cleanQuery = rawQuery.replace(/^#+/, '').trim();
+    const queryFilter = cleanQuery
+      ? {
+          $or: [
+            { name: { $regex: cleanQuery, $options: "i" } },
+            { description: { $regex: cleanQuery, $options: "i" } },
+            { category: { $regex: cleanQuery, $options: "i" } },
+          ],
+        }
+      : {};
+
+    const communities = await Community.find(queryFilter).populate("creatorId", "fullName username avatarUrl");
 
     const communitiesWithCounts = await Promise.all(
       communities.map(async (community) => {

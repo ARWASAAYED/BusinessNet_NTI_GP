@@ -21,11 +21,14 @@ exports.searchBusinesses = async (req, res) => {
   try {
     const { q, category } = req.query;
     const query = {};
+    const cleanQ = q ? q.replace(/^#+/, '').trim() : '';
 
-    if (q) {
+    if (cleanQ) {
       query.$or = [
-        { name: { $regex: q, $options: "i" } },
-        { description: { $regex: q, $options: "i" } },
+        { name: { $regex: cleanQ, $options: "i" } },
+        { description: { $regex: cleanQ, $options: "i" } },
+        { category: { $regex: cleanQ, $options: "i" } },
+        { industry: { $regex: cleanQ, $options: "i" } },
       ];
     }
 
@@ -99,6 +102,29 @@ exports.followBusiness = async (req, res) => {
     res.json({
       success: true,
       message: "Followed successfully",
+      data: business,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.unfollowBusiness = async (req, res) => {
+  try {
+    const business = await Business.findById(req.params.id);
+    if (!business)
+      return res.status(404).json({ message: "Business not found" });
+
+    const userId = req.user._id;
+
+    business.followers = (business.followers || []).filter(
+      (id) => id.toString() !== userId.toString()
+    );
+    await business.save();
+
+    res.json({
+      success: true,
+      message: "Unfollowed successfully",
       data: business,
     });
   } catch (error) {
@@ -259,6 +285,7 @@ exports.getAnalytics = async (req, res) => {
         $group: {
           _id: null,
           totalImpressions: { $sum: "$impressions" },
+          totalUniqueViews: { $sum: "$uniqueViews" },
           totalUpvotes: { $sum: { $size: "$upvotes" } },
           totalDownvotes: { $sum: { $size: "$downvotes" } },
           totalComments: { $sum: "$commentsCount" },
@@ -286,6 +313,7 @@ exports.getAnalytics = async (req, res) => {
 
     const stats = postStats[0] || {
       totalImpressions: 0,
+      totalUniqueViews: 0,
       totalUpvotes: 0,
       totalDownvotes: 0,
       totalComments: 0,
@@ -318,7 +346,7 @@ exports.getPostPerformance = async (req, res) => {
   try {
     const { id } = req.params; // businessId
     const posts = await Post.find({ businessId: id })
-      .select("content impressions upvotesCount commentsCount shareCount createdAt isTrending")
+      .select("content impressions uniqueViews upvotesCount commentsCount shareCount createdAt isTrending")
       .sort({ impressions: -1 })
       .limit(10);
 

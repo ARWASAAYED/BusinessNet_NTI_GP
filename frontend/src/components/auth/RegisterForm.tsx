@@ -9,12 +9,17 @@ import {
   Building2,
   ArrowRight,
   Sparkles,
+  Eye,
+  EyeOff,
+  Camera,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/components/layout/LanguageProvider";
 
 const RegisterForm = () => {
   const { register } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -43,6 +48,8 @@ const RegisterForm = () => {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -59,7 +66,7 @@ const RegisterForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
+      setError(t('auth.passwordsMismatch') || "Passwords do not match");
       return;
     }
 
@@ -78,55 +85,65 @@ const RegisterForm = () => {
     });
 
     if (!result.success) {
-      setError(result.error || "Registration failed");
+      setError(result.error || t('auth.registrationFailed') || "Registration failed");
       setIsLoading(false);
     }
-    // Redirection is handled in useAuth hook
   };
+
+  const isBusiness = formData.accountType === "business";
+
+  // Shared input class
+  const inputClass =
+    "w-full px-4 py-3.5 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-600 focus:border-primary-500/50 focus:ring-2 focus:ring-primary-500/20 transition-all duration-200 outline-none text-sm";
+  const labelClass =
+    "text-xs font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
       className="w-full max-w-md mx-auto"
     >
-      <div className="glass-effect rounded-2xl p-8 shadow-2xl">
+      <div className="relative bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-8 shadow-2xl shadow-black/40">
+        {/* Inner glow */}
+        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+          <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-secondary-500/5 rounded-full blur-3xl" />
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="relative text-center mb-7">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 glow-effect ${
-              formData.accountType === "business"
-                ? "gradient-bg-accent"
-                : "gradient-bg-primary"
+            className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 shadow-xl ${
+              isBusiness
+                ? "bg-gradient-to-br from-amber-500 to-orange-600 shadow-amber-500/30"
+                : "bg-gradient-to-br from-primary-500 to-secondary-600 shadow-primary-500/30"
             }`}
           >
-            {formData.accountType === "business" ? (
+            {isBusiness ? (
               <Building2 className="w-8 h-8 text-white" />
             ) : (
               <Sparkles className="w-8 h-8 text-white" />
             )}
           </motion.div>
-          <h1 className="text-3xl font-bold gradient-text mb-2">
-            Create an Account
+          <h1 className="text-3xl font-black text-white mb-1.5 tracking-tight">
+            {t('auth.registerTitle')}
           </h1>
-          <p className="text-gray-600">
-            Join the professional network for businesses
+          <p className="text-gray-400 text-sm font-medium">
+            {t('auth.registerSubtitle')}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="relative space-y-4">
           {/* Avatar Upload */}
-          <div className="flex flex-col items-center mb-6">
+          <div className="flex flex-col items-center mb-2">
             <div className="relative group">
               <div
-                className={`w-24 h-24 rounded-full overflow-hidden border-2 flex items-center justify-center bg-gray-50 ${
-                  formData.accountType === "business"
-                    ? "border-accent-200"
-                    : "border-primary-200"
+                className={`w-20 h-20 rounded-full overflow-hidden border-2 flex items-center justify-center bg-white/5 ${
+                  isBusiness ? "border-amber-500/40" : "border-primary-500/40"
                 }`}
               >
                 {avatarPreview ? (
@@ -136,20 +153,14 @@ const RegisterForm = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <User
-                    className={`w-12 h-12 ${
-                      formData.accountType === "business"
-                        ? "text-accent-300"
-                        : "text-primary-300"
-                    }`}
-                  />
+                  <User className="w-10 h-10 text-gray-600" />
                 )}
               </div>
               <label
                 htmlFor="avatar-upload"
-                className="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity duration-200"
+                className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity duration-200"
               >
-                <span className="text-xs font-bold">Change</span>
+                <Camera className="w-5 h-5" />
               </label>
             </div>
             <input
@@ -162,13 +173,13 @@ const RegisterForm = () => {
             <button
               type="button"
               onClick={() => document.getElementById("avatar-upload")?.click()}
-              className={`mt-2 text-xs font-bold uppercase tracking-widest ${
-                formData.accountType === "business"
-                  ? "text-accent-600"
-                  : "text-primary-600"
+              className={`mt-2 text-xs font-bold uppercase tracking-widest transition-colors ${
+                isBusiness
+                  ? "text-amber-400 hover:text-amber-300"
+                  : "text-primary-400 hover:text-primary-300"
               }`}
             >
-              Upload Photo
+              {t('auth.uploadPhoto')}
             </button>
           </div>
 
@@ -176,51 +187,50 @@ const RegisterForm = () => {
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="p-4 text-sm text-red-600 bg-red-50 rounded-lg border border-red-200"
+              className="p-4 text-sm text-red-400 bg-red-500/10 rounded-xl border border-red-500/20 flex items-center gap-2"
             >
+              <span className="w-1.5 h-1.5 bg-red-400 rounded-full flex-shrink-0" />
               {error}
             </motion.div>
           )}
 
           {/* Account Type Toggle */}
-          <div className="grid grid-cols-2 gap-3 p-1.5 bg-gray-100 rounded-xl">
+          <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 border border-white/10 rounded-xl">
             <motion.button
               type="button"
               whileTap={{ scale: 0.95 }}
-              className={`py-3 text-sm font-semibold rounded-lg transition-all duration-300 ${
-                formData.accountType === "user"
-                  ? "bg-white text-primary-600 shadow-md"
-                  : "text-gray-500 hover:text-gray-700"
+              className={`py-2.5 text-sm font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                !isBusiness
+                  ? "bg-primary-600 text-white shadow-lg shadow-primary-500/20"
+                  : "text-gray-500 hover:text-gray-300"
               }`}
               onClick={() => setFormData({ ...formData, accountType: "user" })}
             >
-              <User className="w-4 h-4 inline mr-2" />
-              Individual
+              <User className="w-4 h-4" />
+              {t('auth.individual') || t('auth.personal') || 'Individual'}
             </motion.button>
             <motion.button
               type="button"
               whileTap={{ scale: 0.95 }}
-              className={`py-3 text-sm font-semibold rounded-lg transition-all duration-300 ${
-                formData.accountType === "business"
-                  ? "bg-white text-accent-600 shadow-md"
-                  : "text-gray-500 hover:text-gray-700"
+              className={`py-2.5 text-sm font-bold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                isBusiness
+                  ? "bg-amber-600 text-white shadow-lg shadow-amber-500/20"
+                  : "text-gray-500 hover:text-gray-300"
               }`}
               onClick={() =>
                 setFormData({ ...formData, accountType: "business" })
               }
             >
-              <Building2 className="w-4 h-4 inline mr-2" />
-              Business
+              <Building2 className="w-4 h-4" />
+              {t('auth.business') || t('auth.businessAccount') || 'Business'}
             </motion.button>
           </div>
 
-        
-
-          {/* Full Name Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <User className="w-4 h-4 text-primary-500" />
-              Full Name
+          {/* Full Name */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>
+              <User className="w-3.5 h-3.5 text-primary-400" />
+              {t('auth.fullName')}
             </label>
             <input
               type="text"
@@ -230,15 +240,15 @@ const RegisterForm = () => {
               onChange={(e) =>
                 setFormData({ ...formData, fullName: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
+              className={inputClass}
             />
           </div>
 
-          {/* Username Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <User className="w-4 h-4 text-primary-500" />
-              Username
+          {/* Username */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>
+              <User className="w-3.5 h-3.5 text-primary-400" />
+              {t('auth.username')}
             </label>
             <input
               type="text"
@@ -248,15 +258,15 @@ const RegisterForm = () => {
               onChange={(e) =>
                 setFormData({ ...formData, username: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
+              className={inputClass}
             />
           </div>
 
-          {/* Email Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Mail className="w-4 h-4 text-primary-500" />
-              Email Address
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>
+              <Mail className="w-3.5 h-3.5 text-primary-400" />
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -266,115 +276,144 @@ const RegisterForm = () => {
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
+              className={inputClass}
             />
           </div>
-            {/* Category Selection - Only for Business */}
-          {formData.accountType === "business" && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="space-y-2"
-            >
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-accent-500" />
-                Business Category
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  setFormData({ ...formData, category: e.target.value })
-                }
-                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent-500 focus:ring-4 focus:ring-accent-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
+
+          {/* Category (business only) */}
+          <AnimatePresence>
+            {isBusiness && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="space-y-1.5 overflow-hidden"
               >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </motion.div>
-          )}
+                <label className={labelClass}>
+                  <Building2 className="w-3.5 h-3.5 text-amber-400" />
+                  {t('auth.businessCategory')}
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) =>
+                    setFormData({ ...formData, category: e.target.value })
+                  }
+                  className="w-full px-4 py-3.5 rounded-xl border border-white/10 bg-gray-900 text-white focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 transition-all duration-200 outline-none text-sm"
+                >
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat} className="bg-gray-900 text-white">
+                      {t(`categories.${cat}`, cat)}
+                    </option>
+                  ))}
+                </select>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          {/* Password Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Lock className="w-4 h-4 text-primary-500" />
-              Password
+          {/* Password */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>
+              <Lock className="w-3.5 h-3.5 text-primary-400" />
+              {t('auth.password')}
             </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              required
-              value={formData.password}
-              onChange={(e) =>
-                setFormData({ ...formData, password: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+                className={`${inputClass} pr-12`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Confirm Password Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-              <Lock className="w-4 h-4 text-primary-500" />
-              Confirm Password
+          {/* Confirm Password */}
+          <div className="space-y-1.5">
+            <label className={labelClass}>
+              <Lock className="w-3.5 h-3.5 text-primary-400" />
+              {t('auth.confirmPassword')}
             </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              required
-              value={formData.confirmPassword}
-              onChange={(e) =>
-                setFormData({ ...formData, confirmPassword: e.target.value })
-              }
-              className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-            />
+            <div className="relative">
+              <input
+                type={showConfirm ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({ ...formData, confirmPassword: e.target.value })
+                }
+                className={`${inputClass} pr-12`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300 transition-colors"
+              >
+                {showConfirm ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={isLoading}
-            className={`w-full text-white font-semibold py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-              formData.accountType === "business"
-                ? "gradient-bg-accent hover:shadow-accent-500/50"
-                : "gradient-bg-primary hover:shadow-primary-500/50"
+            className={`w-full text-white font-bold py-3.5 px-4 rounded-xl shadow-xl transition-all duration-300 flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:cursor-not-allowed mt-2 ${
+              isBusiness
+                ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-500/20"
+                : "bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-500 hover:to-secondary-500 shadow-primary-500/20"
             }`}
           >
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                Get Started
-                <ArrowRight className="w-5 h-5" />
+                {t('auth.register')}
+                <ArrowRight className={`w-4 h-4 ${isRTL ? 'rotate-180' : ''}`} />
               </>
             )}
           </motion.button>
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-white/10" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white/80 text-gray-500 rounded-full">
-                or
+            <div className="relative flex justify-center">
+              <span className="px-4 text-gray-600 text-xs font-bold uppercase tracking-widest">
+                {t('auth.orContinue')}
               </span>
             </div>
           </div>
 
           {/* Sign In Link */}
-          <p className="text-center text-sm text-gray-600">
-            Already have an account?{" "}
+          <p className="text-center text-sm text-gray-500">
+            {t('auth.hasAccount')}{" "}
             <Link
               href="/login"
-              className="font-semibold text-primary-600 hover:text-primary-700 hover:underline transition-colors"
+              className="font-bold text-primary-400 hover:text-primary-300 transition-colors"
             >
-              Sign in
+              {t('auth.login')}
             </Link>
           </p>
         </form>

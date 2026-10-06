@@ -14,6 +14,15 @@ export interface Post {
     name: string;
     logo?: string;
   };
+  community?: {
+    _id: string;
+    name: string;
+    category?: string;
+    avatarUrl?: string;
+    isPrivate?: boolean;
+  };
+  isRepost?: boolean;
+  originalPost?: Post;
   content: string;
   media?: {
     type: 'image' | 'video';
@@ -28,6 +37,7 @@ export interface Post {
   commentCount: number;
   shareCount: number;
   impressions?: number;
+  uniqueViews?: number;
   isPromoted?: boolean;
   // AI and Reputation Scores
   sentimentScore?: number;
@@ -138,8 +148,14 @@ const postService = {
     return response.data.data;
   },
 
+  // Repost a post (instant or with quote commentary)
+  repostPost: async (postId: string, content?: string): Promise<Post> => {
+    const response = await api.post(`/posts/${postId}/repost`, { content });
+    return response.data.data;
+  },
+
   // Increment view count
-  incrementView: async (postId: string): Promise<{ success: boolean; views: number }> => {
+  incrementView: async (postId: string): Promise<{ success: boolean; views: number; uniqueViews: number }> => {
     const response = await api.post(`/posts/${postId}/view`);
     return response.data;
   },

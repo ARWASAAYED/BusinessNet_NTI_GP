@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Swords, Trophy, Vote, Users, Clock, Zap } from 'lucide-react';
+import { Swords, Trophy, Vote, Users, Clock, Zap, Plus, X, Image as ImageIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Duel } from '@/services/duelService';
 import Avatar from '../common/Avatar';
@@ -11,35 +11,72 @@ import { formatTimeAgo } from '@/utils/dateHelpers';
 import duelService from '@/services/duelService';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/app/providers';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 interface DuelCardProps {
   duel: Duel;
   onVote?: () => void;
+  onAccepted?: () => void;
 }
 
-export default function DuelCard({ duel, onVote }: DuelCardProps) {
+export default function DuelCard({ duel, onVote, onAccepted }: DuelCardProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [activeDuel, setActiveDuel] = useState(duel);
   const [isVoting, setIsVoting] = useState(false);
 
   const challengerVotes = activeDuel.challengerSubmission?.votes?.length || 0;
   const challengedVotes = activeDuel.challengedSubmission?.votes?.length || 0;
-  const totalVotes = challengerVotes + challengedVotes || 1;
+  const totalVotes = challengerVotes + challengedVotes;
 
-  const challengerPercent = Math.round((challengerVotes / totalVotes) * 100);
-  const challengedPercent = 100 - challengerPercent;
+  const challengerPercent = totalVotes === 0 ? 50 : Math.round((challengerVotes / totalVotes) * 100);
+  const challengedPercent = totalVotes === 0 ? 50 : 100 - challengerPercent;
 
-  const hasVoted = user && (
-    activeDuel.challengerSubmission?.votes?.includes(user._id) || 
-    activeDuel.challengedSubmission?.votes?.includes(user._id)
+  const currentUserId = user?._id || (user as any)?.id || '';
+  const hasVoted = Boolean(
+    currentUserId && (
+      activeDuel.challengerSubmission?.votes?.some((v: any) => {
+        const id = typeof v === 'string' ? v : v?._id || v?.id || v;
+        return id?.toString() === currentUserId.toString();
+      }) ||
+      activeDuel.challengedSubmission?.votes?.some((v: any) => {
+        const id = typeof v === 'string' ? v : v?._id || v?.id || v;
+        return id?.toString() === currentUserId.toString();
+      })
+    )
   );
 
   const [submissionText, setSubmissionText] = useState('');
+  const [submissionMedia, setSubmissionMedia] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [isAccepting, setIsAccepting] = useState(false);
 
+  const getActor = (actor: any) => {
+    return typeof actor === 'string' ? { _id: actor, username: 'User', fullName: 'User', avatarUrl: '' } : actor;
+  };
+
+  const challenger = getActor(activeDuel.challenger);
+  const challenged = getActor(activeDuel.challenged);
+
+  // Robust ID comparison - normalize both sides to strings
+  const normalizeId = (id: any): string => {
+    if (!id) return '';
+    if (typeof id === 'string') return id;
+    return id._id?.toString() || id.id?.toString() || id.toString();
+  };
+
+  const isChallenger = normalizeId(activeDuel.challenger) === normalizeId(currentUserId)
+    || normalizeId(challenger._id) === normalizeId(currentUserId);
+  const isChallenged = normalizeId(activeDuel.challenged) === normalizeId(currentUserId)
+    || normalizeId(challenged._id) === normalizeId(currentUserId);
+
   const handleVote = async (side: 'challenger' | 'challenged') => {
-    if (!user || hasVoted || isVoting) return;
+    if (!user) {
+      showToast(t('battles.signInToVote'), 'info');
+      return;
+    }
+    if (hasVoted || isVoting) return;
     
     // Handle Mock Duels locally for entertainment
     if (activeDuel._id.startsWith('mock-')) {
@@ -47,15 +84,16 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
       if (side === 'challenger') {
         updated.challengerSubmission = {
           ...updated.challengerSubmission!,
-          votes: [...(updated.challengerSubmission?.votes || []), user._id]
+          votes: [...(updated.challengerSubmission?.votes || []), currentUserId]
         };
       } else {
         updated.challengedSubmission = {
           ...updated.challengedSubmission!,
-          votes: [...(updated.challengedSubmission?.votes || []), user._id]
+          votes: [...(updated.challengedSubmission?.votes || []), currentUserId]
         };
       }
       setActiveDuel(updated);
+      showToast('Vote recorded for skill battle!', 'success');
       onVote?.();
       return;
     }
@@ -64,23 +102,48 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
     try {
       const updated = await duelService.vote(activeDuel._id, side);
       setActiveDuel(updated);
+      showToast('Vote recorded for battle!', 'success');
       onVote?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Voting failed:', error);
+      showToast(error.response?.data?.message || 'Voting failed', 'error');
     } finally {
       setIsVoting(false);
     }
+  };
+
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    setSubmissionMedia(prev => [...prev, ...files]);
+    const newPreviews = files.map(file => URL.createObjectURL(file));
+    setPreviews(prev => [...prev, ...newPreviews]);
+  };
+
+  const removeMedia = (index: number) => {
+    setSubmissionMedia(prev => prev.filter((_, i) => i !== index));
+    URL.revokeObjectURL(previews[index]);
+    setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleAccept = async () => {
     if (!user || !submissionText || isAccepting) return;
     setIsAccepting(true);
     try {
-      const updated = await duelService.acceptDuel(activeDuel._id, { content: submissionText });
+      const updated = await duelService.acceptDuel(activeDuel._id, { 
+        content: submissionText,
+        media: submissionMedia
+      });
       setActiveDuel(updated);
       showToast('Battle is LIVE! Good luck.', 'success');
-      // Refresh to put it in the "Active" feed properly
-      setTimeout(() => window.location.reload(), 1500);
+      // Use callback if provided, otherwise reload as fallback
+      if (onAccepted) {
+        onAccepted();
+      } else if (onVote) {
+        onVote();
+      } else {
+        setTimeout(() => window.location.reload(), 1500);
+      }
     } catch (error) {
       console.error('Failed to accept duel:', error);
       showToast('Failed to start battle. Try again.', 'error');
@@ -95,11 +158,32 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
       <div className="bg-primary-500 text-white py-2 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
            <Swords className="w-4 h-4" />
-           <span className="text-[10px] font-black uppercase tracking-[0.2em]">Industry Duel: {activeDuel.category}</span>
+           <span className="text-[10px] font-black uppercase tracking-[0.2em]">{t('battles.industryDuel')}: {activeDuel.category}</span>
         </div>
         <div className="flex items-center gap-2 text-[10px] font-bold">
            <Clock className="w-3 h-3" />
-           <span>Ends {new Date(activeDuel.expiresAt).toLocaleDateString()}</span>
+           <span>
+             {new Date(activeDuel.expiresAt) < new Date() && activeDuel.status === 'active' 
+               ? t('battles.expired')
+               : `${t('battles.ends')} ${new Date(activeDuel.expiresAt).toLocaleDateString()}`
+             }
+           </span>
+           {new Date(activeDuel.expiresAt) < new Date() && activeDuel.status === 'active' && (
+             <button 
+               onClick={async () => {
+                 try {
+                   const updated = await duelService.finalize(activeDuel._id);
+                   setActiveDuel(updated);
+                   showToast('Battle finalized!', 'success');
+                 } catch (e) {
+                   showToast('Finalization failed', 'error');
+                 }
+               }}
+               className="ms-2 bg-white text-primary-600 px-2 py-0.5 rounded uppercase font-black hover:bg-primary-50 transition-colors"
+             >
+               {t('battles.finalize')}
+             </button>
+           )}
         </div>
       </div>
 
@@ -116,17 +200,24 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
           {/* Challenger */}
           <div className="flex flex-col items-center text-center space-y-4">
              <div className="relative">
-                <Avatar src={activeDuel.challenger.avatarUrl} alt={activeDuel.challenger.fullName} size="xl" className="border-4 border-white dark:border-gray-900 ring-4 ring-primary-500/20" />
+                <Avatar src={challenger.avatarUrl} alt={challenger.fullName} size="xl" className="border-4 border-white dark:border-gray-900 ring-4 ring-primary-500/20" />
                 <div className="absolute -top-2 -right-2 bg-yellow-500 text-white p-1 rounded-full shadow-lg">
                    <Trophy className="w-4 h-4" />
                 </div>
              </div>
              <div>
-                <h4 className="font-black text-gray-900 dark:text-gray-100">{activeDuel.challenger.fullName}</h4>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">The Challenger</p>
+                <h4 className="font-black text-gray-900 dark:text-gray-100">{challenger.fullName}</h4>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('battles.theChallenger')}</p>
              </div>
-             <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl w-full border border-gray-100 dark:border-gray-800 text-sm font-medium italic italic leading-relaxed">
-                "{activeDuel.challengerSubmission?.content || 'Awaiting entry...'}"
+             <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl w-full border border-gray-100 dark:border-gray-800 text-sm font-medium italic leading-relaxed">
+                <p className="mb-2">"{activeDuel.challengerSubmission?.content || t('battles.awaitingEntry')}"</p>
+                {activeDuel.challengerSubmission?.media && activeDuel.challengerSubmission.media.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2 not-italic">
+                    {activeDuel.challengerSubmission.media.map((url, i) => (
+                      <img key={i} src={url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${url}`} className="w-16 h-16 object-cover rounded-lg border border-gray-100" alt="evidence" />
+                    ))}
+                  </div>
+                )}
              </div>
              {activeDuel.status === 'active' && (
                <Button 
@@ -137,7 +228,7 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
                >
                   <div className="flex items-center justify-center gap-2">
                      <Vote className={`w-4 h-4 ${hasVoted ? 'text-success-500' : ''}`} />
-                     <span>{hasVoted ? 'Vote Recorded' : 'Support Skill'}</span>
+                     <span>{hasVoted ? t('battles.voteRecorded') : t('battles.supportSkill')}</span>
                   </div>
                </Button>
              )}
@@ -145,35 +236,68 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
 
           {/* Challenged */}
           <div className="flex flex-col items-center text-center space-y-4">
-             <Avatar src={activeDuel.challenged.avatarUrl} alt={activeDuel.challenged.fullName} size="xl" className="border-4 border-white dark:border-gray-900 ring-4 ring-secondary-500/20" />
+             <Avatar src={challenged.avatarUrl} alt={challenged.fullName} size="xl" className="border-4 border-white dark:border-gray-900 ring-4 ring-secondary-500/20" />
              <div>
-                <h4 className="font-black text-gray-900 dark:text-gray-100">{activeDuel.challenged.fullName}</h4>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">The Contender</p>
+                <h4 className="font-black text-gray-900 dark:text-gray-100">{challenged.fullName}</h4>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('battles.theContender')}</p>
              </div>
              <div className="p-4 bg-white dark:bg-gray-900 rounded-2xl w-full border border-gray-100 dark:border-gray-800 text-sm font-medium italic leading-relaxed">
-                "{activeDuel.challengedSubmission?.content || (
+                {activeDuel.status === 'active' ? (
+                  <>
+                   <p className="mb-2">"{activeDuel.challengedSubmission?.content}"</p>
+                   {activeDuel.challengedSubmission?.media && activeDuel.challengedSubmission.media.length > 0 && (
+                     <div className="flex flex-wrap gap-2 mt-2 not-italic">
+                       {activeDuel.challengedSubmission.media.map((url, i) => (
+                          <img key={i} src={url.startsWith('http') ? url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${url}`} className="w-16 h-16 object-cover rounded-lg border border-gray-100" alt="evidence" />
+                       ))}
+                     </div>
+                   )}
+                  </>
+                ) : (
                    activeDuel.status === 'pending' ? (
-                      user?._id === activeDuel.challenged._id ? (
+                      isChallenged ? (
                         <div className="space-y-4 not-italic">
                            <textarea 
                              className="w-full bg-gray-50 dark:bg-gray-950 border-none rounded-xl text-xs p-3 focus:ring-1 focus:ring-primary-500" 
-                             placeholder="Enter your opening argument to accept..." 
+                             placeholder={t('battles.enterArgument')}
                              value={submissionText}
                              onChange={(e) => setSubmissionText(e.target.value)}
                            />
+                           
+                           <div className="flex flex-wrap gap-2">
+                             {previews.map((u, i) => (
+                               <div key={i} className="relative w-12 h-12">
+                                 <img src={u} className="w-full h-full object-cover rounded-lg" alt="preview" />
+                                 <button onClick={() => removeMedia(i)} className="absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full"><X className="w-2 h-2" /></button>
+                               </div>
+                             ))}
+                             {previews.length < 5 && (
+                               <label className="w-12 h-12 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-primary-500">
+                                 <ImageIcon className="w-4 h-4 text-gray-300" />
+                                 <input type="file" className="hidden" multiple accept="image/*" onChange={handleMediaSelect} />
+                               </label>
+                             )}
+                           </div>
+
                            <Button 
                              size="sm" 
-                             className="w-full bg-success-600 hover:bg-success-700"
+                             className="w-full bg-success-600 hover:bg-success-700 font-black uppercase tracking-widest text-[10px]"
                              onClick={handleAccept}
                              isLoading={isAccepting}
                              disabled={!submissionText.trim()}
                            >
-                             Accept & Go Live
+                             {t('battles.finalizeAndFight')}
                            </Button>
                         </div>
-                      ) : "Preparing defense..."
-                   ) : "Preparing defense..."
-                )}"
+                      ) : t('battles.preparingDefense')
+                   ) : (
+                     activeDuel.status === 'completed' ? (
+                       <>
+                         <p className="mb-2">"{activeDuel.challengedSubmission?.content}"</p>
+                       </>
+                     ) : t('battles.awaitingResponse')
+                   )
+                )}
              </div>
              {activeDuel.status === 'active' && (
                <Button 
@@ -184,14 +308,14 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
                >
                   <div className="flex items-center justify-center gap-2">
                      <Zap className={`w-4 h-4 ${hasVoted ? 'text-success-500' : ''}`} />
-                     <span>{hasVoted ? 'Vote Recorded' : 'Back Contender'}</span>
+                     <span>{hasVoted ? t('battles.voteRecorded') : t('battles.backContender')}</span>
                   </div>
                </Button>
              )}
-             {activeDuel.status === 'pending' && user?._id === activeDuel.challenger._id && (
+             {activeDuel.status === 'pending' && isChallenger && (
                 <div className="flex items-center gap-2 text-primary-500 font-bold text-xs animate-pulse bg-primary-500/10 px-4 py-2 rounded-full justify-center">
                    <Clock className="w-3 h-3" />
-                   <span>Waiting for Response</span>
+                   <span>{t('battles.waitingResponse')}</span>
                 </div>
              )}
           </div>
@@ -219,7 +343,7 @@ export default function DuelCard({ duel, onVote }: DuelCardProps) {
                 className="h-full bg-secondary-500"
               />
            </div>
-           <p className="mt-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Audience Professional Verdict</p>
+           <p className="mt-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">{t('battles.audienceVerdict')}</p>
         </div>
       </div>
     </Card>

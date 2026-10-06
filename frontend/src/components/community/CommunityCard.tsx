@@ -8,6 +8,7 @@ import Card from '../common/Card';
 import Badge from '../common/Badge';
 import Button from '../common/Button';
 import { Community } from '@/services/communityService';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 interface CommunityCardProps {
   community: Community;
@@ -16,6 +17,7 @@ interface CommunityCardProps {
 }
 
 const CommunityCard: React.FC<CommunityCardProps> = ({ community, onJoin, isMember }) => {
+  const { t } = useLanguage();
   const getFullUrl = (path?: string) => {
     if (!path) return undefined;
     if (path.startsWith('http')) return path;
@@ -39,8 +41,8 @@ const CommunityCard: React.FC<CommunityCardProps> = ({ community, onJoin, isMemb
             />
           )}
           {community.isPrivate && (
-            <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2">
-              <Lock className="w-4 h-4 text-gray-700" />
+            <div className="absolute top-3 right-3 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm rounded-full p-2">
+              <Lock className="w-4 h-4 text-gray-700 dark:text-gray-300" />
             </div>
           )}
         </div>
@@ -49,40 +51,40 @@ const CommunityCard: React.FC<CommunityCardProps> = ({ community, onJoin, isMemb
           {/* Name and Category */}
           <div className="mb-3">
             <Link href={`/communities/${community._id}`}>
-              <h3 className="font-bold text-lg text-gray-900 hover:text-primary-600 transition-colors mb-2">
+              <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors mb-2">
                 {community.name}
               </h3>
             </Link>
             <Badge variant="secondary" size="sm">
-              {community.category}
+              {t(`categories.${community.category}`, community.category)}
             </Badge>
           </div>
 
           {/* Description */}
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
             {community.description}
           </p>
 
           {/* Stats */}
-          <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
+          <div className="flex items-center gap-4 mb-4 text-sm text-gray-500 dark:text-gray-400">
             <div className="flex items-center gap-1">
               <Users className="w-4 h-4" />
-              <span>{community.memberCount} members</span>
+              <span>{community.memberCount} {t('communities.members')}</span>
             </div>
             <div className="flex items-center gap-1">
               <TrendingUp className="w-4 h-4" />
-              <span>{community.isPrivate ? 'Private' : 'Public'}</span>
+              <span>{community.isPrivate ? t('communities.private') : t('communities.public')}</span>
             </div>
           </div>
 
           {/* Created By */}
-          <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
+          <div className="flex items-center gap-2 mb-4 text-sm text-gray-500 dark:text-gray-400">
             <Calendar className="w-4 h-4" />
             <span>
-              Created by{' '}
+              {t('communities.createdBy', 'Created by')}{' '}
               <Link
                 href={`/profile/${community.createdBy._id}`}
-                className="text-primary-600 hover:underline"
+                className="text-primary-600 dark:text-primary-400 hover:underline"
               >
                 {community.createdBy.username}
               </Link>
@@ -97,7 +99,7 @@ const CommunityCard: React.FC<CommunityCardProps> = ({ community, onJoin, isMemb
               onClick={onJoin}
               className="w-full"
             >
-              {isMember ? 'Joined' : 'Join Community'}
+              {isMember ? t('communities.joined') : t('communities.joinCommunity')}
             </Button>
           )}
         </div>

@@ -12,6 +12,7 @@ import NotificationSettings from '@/components/settings/NotificationSettings';
 import SecuritySettings from '@/components/settings/SecuritySettings';
 import AccountSettings from '@/components/settings/AccountSettings';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 import userService, { User as UserType } from '@/services/userService';
 
 type SettingsTab = 'profile' | 'notifications' | 'security' | 'account';
@@ -19,18 +20,19 @@ type SettingsTab = 'profile' | 'notifications' | 'security' | 'account';
 export default function SettingsPage() {
   const router = useRouter();
   const { isAuthenticated, user: authUser, isLoading: authLoading, logout } = useAuth();
-  
+  const { t, isRTL } = useLanguage();
+
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [userProfile, setUserProfile] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const tabs = useMemo(() => [
-    { id: 'profile', label: 'Edit Profile', icon: User, description: 'Manage your public information and how others see you.' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Control how and when you receive updates.' },
-    { id: 'security', label: 'Security', icon: Shield, description: 'Manage your account protection and login activity.' },
-    { id: 'account', label: 'Account', icon: Settings, description: 'Manage your account status and general preferences.' },
-  ], []);
+    { id: 'profile', label: t('settings.tabs.profile'), icon: User, description: t('settings.tabs.profileDesc') },
+    { id: 'notifications', label: t('settings.tabs.notifications'), icon: Bell, description: t('settings.tabs.notificationsDesc') },
+    { id: 'security', label: t('settings.tabs.security'), icon: Shield, description: t('settings.tabs.securityDesc') },
+    { id: 'account', label: t('settings.tabs.account'), icon: Settings, description: t('settings.tabs.accountDesc') },
+  ], [t]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -72,13 +74,13 @@ export default function SettingsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1">
+    <div className={`max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 ${isRTL ? 'rtl' : 'ltr'}`}>
       <div className="flex flex-col md:flex-row gap-8">
         {/* Left Sidebar Navigation */}
         <aside className="w-full md:w-64 space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your account preferences</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('settings.title')}</h1>
+            <p className="text-sm text-gray-500 mt-1">{t('settings.subtitle')}</p>
           </div>
 
           <nav className="flex flex-row md:flex-col gap-1 overflow-x-auto md:overflow-x-visible pb-2 md:pb-0">
@@ -107,7 +109,7 @@ export default function SettingsPage() {
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
                 <LogOut className="w-5 h-5" />
-                Sign Out
+                {t('settings.signOut')}
               </button>
             </div>
           </nav>
@@ -120,15 +122,15 @@ export default function SettingsPage() {
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card className="p-8 text-center border-red-200 bg-red-50/50">
                   <p className="text-red-600 font-medium mb-4">{error}</p>
-                  <Button onClick={() => window.location.reload()}>Reload Page</Button>
+                  <Button onClick={() => window.location.reload()}>{t('common.reload') || 'Reload Page'}</Button>
                 </Card>
               </motion.div>
             ) : (
               <motion.div
                 key={activeTab}
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: isRTL ? -10 : 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: isRTL ? 10 : -10 }}
                 transition={{ duration: 0.2 }}
                 className="space-y-6"
               >

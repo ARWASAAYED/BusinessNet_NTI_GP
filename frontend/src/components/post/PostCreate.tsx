@@ -5,6 +5,7 @@ import { Image as ImageIcon, Send, X, Film, Hash, User as UserIcon, Smile } from
 import { motion, AnimatePresence } from 'framer-motion';
 import Avatar from '../common/Avatar';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 import { Briefcase, Cpu, Landmark, Palette, GraduationCap, Gavel, Globe as GlobeIcon } from 'lucide-react';
 
 interface PostCreateProps {
@@ -13,6 +14,7 @@ interface PostCreateProps {
 
 const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
   const { user } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,22 +84,35 @@ const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
     >
       <div className="flex gap-4">
         <div className="hidden sm:block">
-          <Avatar src={user?.avatar} alt={user?.username || 'User'} size="md" className="border-2 border-primary-500/20" />
+          <Avatar 
+            src={user?.avatar} 
+            alt={user?.username || 'User'} 
+            size="md" 
+            className="border-2 border-primary-500/20" 
+          />
         </div>
         
         <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            {!user && isExpanded && (
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-950/80 px-2 py-0.5 rounded-full border border-primary-200 dark:border-primary-800/60">
+                {t('feed.guestBrowsing')}
+              </span>
+            )}
+          </div>
+
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             onFocus={() => setIsExpanded(true)}
-            placeholder="Share something professional..."
+            placeholder={user ? t('feed.createPost') : t('feed.guestPlaceholder')}
             className="w-full px-0 py-2 bg-transparent border-none focus:ring-0 text-lg text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 resize-none min-h-[40px] transition-all duration-300"
             rows={isExpanded ? 3 : 1}
           />
 
           {isExpanded && (
             <div className="flex flex-wrap gap-2 mb-4 animate-in fade-in slide-in-from-top-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 self-center">Category:</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 self-center">{t('feed.categoryLabel')}:</span>
               {categories.map((cat) => (
                 <button
                   key={cat.name}
@@ -109,7 +124,7 @@ const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
                   }`}
                 >
                   {cat.icon}
-                  {cat.name}
+                  {t(`categories.${cat.name}`, cat.name)}
                 </button>
               ))}
             </div>
@@ -132,11 +147,11 @@ const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
                     )}
                     <button
                       onClick={() => removeMedia(index)}
-                      className="absolute top-1.5 right-1.5 p-1.5 bg-black/60 hover:bg-red-500 text-white rounded-full transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0"
+                      className="absolute top-1.5 end-1.5 p-1.5 bg-black/60 hover:bg-red-500 text-white rounded-full transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0"
                     >
                       <X className="w-3 h-3" />
                     </button>
-                    <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-black/40 text-[8px] text-white font-black uppercase rounded backdrop-blur-md">
+                    <div className="absolute top-1.5 start-1.5 px-2 py-0.5 bg-black/40 text-[8px] text-white font-black uppercase rounded backdrop-blur-md">
                       {media.type}
                     </div>
                   </div>
@@ -160,15 +175,15 @@ const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
                   accept="image/*,video/*"
                   className="hidden"
                 />
-                <ActionIconButton onClick={() => fileInputRef.current?.click()} icon={<ImageIcon className="w-5 h-5" />} label="Media" color="text-primary-500" />
+                <ActionIconButton onClick={() => fileInputRef.current?.click()} icon={<ImageIcon className="w-5 h-5" />} label={t('feed.media')} color="text-primary-500" />
                 <ActionIconButton onClick={() => {
                   setContent(prev => prev + (prev.length > 0 && !prev.endsWith(' ') ? ' #' : '#'));
                   setIsExpanded(true);
-                }} icon={<Hash className="w-5 h-5" />} label="Tag" color="text-indigo-500" />
-                <ActionIconButton icon={<Smile className="w-5 h-5" />} label="Emoji" color="text-amber-500" />
+                }} icon={<Hash className="w-5 h-5" />} label={t('feed.tag')} color="text-indigo-500" />
+                <ActionIconButton icon={<Smile className="w-5 h-5" />} label={t('feed.emoji')} color="text-amber-500" />
               </div>
 
-              <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-3 ms-auto">
                 <button
                   onClick={() => {
                     setIsExpanded(false);
@@ -180,7 +195,7 @@ const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
                   }}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm font-bold transition-colors"
                 >
-                  Clear
+                  {t('feed.clear')}
                 </button>
                 <motion.button
                   whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(99, 102, 241, 0.4)" }}
@@ -193,8 +208,8 @@ const PostCreate: React.FC<PostCreateProps> = ({ onSubmit }) => {
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   ) : (
                     <>
-                      <span>POST IT</span>
-                      <Send className="w-4 h-4" />
+                      <span>{user ? t('feed.postIt') : t('feed.postAsGuest')}</span>
+                      <Send className={`w-4 h-4 ${isRTL ? '-scale-x-100' : ''}`} />
                     </>
                   )}
                 </motion.button>
@@ -213,7 +228,7 @@ const ActionIconButton = ({ icon, label, onClick, color }: { icon: React.ReactNo
     className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all group relative flex items-center gap-2 ${color}`}
   >
     {icon}
-    <span className="text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all absolute left-full whitespace-nowrap bg-white dark:bg-gray-950 px-2 py-1 rounded-md shadow-lg pointer-events-none z-50">
+    <span className="text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all absolute start-full whitespace-nowrap bg-white dark:bg-gray-950 px-2 py-1 rounded-md shadow-lg pointer-events-none z-50">
       {label}
     </span>
   </button>

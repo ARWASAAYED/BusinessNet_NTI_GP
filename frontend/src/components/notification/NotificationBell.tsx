@@ -31,7 +31,7 @@ const NotificationBell: React.FC<NotificationBellProps> = ({ count = 0, onClick 
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute -top-1 -right-1"
+          className="absolute -top-1 -end-1"
         >
           <Badge variant="danger" size="sm" className="min-w-[20px] h-5 flex items-center justify-center">
             {count > 99 ? '99+' : count}

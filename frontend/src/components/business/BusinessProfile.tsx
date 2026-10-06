@@ -15,11 +15,15 @@ import {
   ShoppingBag,
   Trash2,
   MessageCircle,
+  Film,
+  Play,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import businessService, { Business } from "@/services/businessService";
 import postService, { Post } from "@/services/postService";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/components/layout/LanguageProvider";
 import Card from "../common/Card";
 import MessageButton from "../common/MessageButton";
 import Avatar from "../common/Avatar";
@@ -36,6 +40,7 @@ interface BusinessProfileProps {
 
 export default function BusinessProfile({ businessId }: BusinessProfileProps) {
   const { user } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [business, setBusiness] = useState<Business | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +52,8 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
     description: "",
     price: "",
   });
+  const [activeTimelineTab, setActiveTimelineTab] = useState<'all' | 'media'>('all');
+  const [selectedMedia, setSelectedMedia] = useState<any | null>(null);
 
   const getFullUrl = (path?: string) => {
     if (!path) return undefined;
@@ -135,7 +142,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
   if (!business) {
     return (
       <Card className="p-10 text-center">
-        <p className="text-gray-500">Business not found</p>
+        <p className="text-gray-500">{t('business.notFound')}</p>
       </Card>
     );
   }
@@ -183,7 +190,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                   onClick={() => setShowEditProfile(true)}
                   className="rounded-2xl px-10 h-14 font-black tracking-wide text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
                 >
-                  EDIT PROFILE
+                  {t('business.editProfile')}
                 </Button>
               ) : (
                 <Button
@@ -191,7 +198,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                   onClick={handleFollow}
                   className="rounded-2xl px-10 h-14 font-black tracking-wide text-sm"
                 >
-                  {isFollowing ? "FOLLOWING" : "FOLLOW BUSINESS"}
+                  {isFollowing ? t('business.unfollowBusiness') : t('business.followBusiness')}
                 </Button>
               )}
               <Button
@@ -255,12 +262,12 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                     className="flex items-center gap-2 text-primary-500 hover:text-primary-600 transition-colors"
                   >
                     <Globe className="w-4 h-4" />
-                    <span>Website</span>
+                    <span>{t('business.website')}</span>
                   </a>
                 )}
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-400" />
-                  <span>Est {new Date(business.createdAt).getFullYear()}</span>
+                  <span>{t('business.established')} {new Date(business.createdAt).getFullYear()}</span>
                 </div>
               </div>
             </div>
@@ -273,7 +280,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                     {business.followers.length}
                   </span>
                   <span className="text-[10px] text-gray-400 font-black uppercase tracking-widest">
-                    Followers
+                    {t('business.followers')}
                   </span>
                 </div>
                 <Users className="w-8 h-8 text-primary-500/20" />
@@ -295,7 +302,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-3">
                 <ShoppingBag className="w-6 h-6 text-primary-500" />
-                Offerings
+                {t('business.offerings')}
               </h3>
               {isOwner && (
                 <button
@@ -319,7 +326,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                     <div className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-dashed border-primary-500/30 mb-4 space-y-4">
                       <input
                         type="text"
-                        placeholder="Offering Name"
+                        placeholder={t('business.offeringName')}
                         className="w-full bg-white dark:bg-gray-950 border-none rounded-xl p-3 text-sm focus:ring-2 ring-primary-500"
                         value={newOffering.name}
                         onChange={(e) =>
@@ -330,7 +337,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                         }
                       />
                       <textarea
-                        placeholder="Description"
+                        placeholder={t('business.offeringDesc')}
                         className="w-full bg-white dark:bg-gray-950 border-none rounded-xl p-3 text-sm focus:ring-2 ring-primary-500 resize-none"
                         rows={2}
                         value={newOffering.description}
@@ -343,7 +350,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                       />
                       <input
                         type="number"
-                        placeholder="Price (optional)"
+                        placeholder={t('business.offeringPrice')}
                         className="w-full bg-white dark:bg-gray-950 border-none rounded-xl p-3 text-sm focus:ring-2 ring-primary-500"
                         value={newOffering.price}
                         onChange={(e) =>
@@ -358,14 +365,14 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                           className="flex-1 rounded-xl"
                           onClick={handleAddOffering}
                         >
-                          Save
+                          {t('common.save')}
                         </Button>
                         <Button
                           variant="ghost"
                           className="flex-1 rounded-xl"
                           onClick={() => setShowAddOffering(false)}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </Button>
                       </div>
                     </div>
@@ -406,7 +413,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
               ) : (
                 <div className="text-center py-8">
                   <p className="text-sm text-gray-400 grayscale">
-                    No offerings listed yet.
+                    {t('business.noOfferings')}
                   </p>
                 </div>
               )}
@@ -418,7 +425,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-3">
                 <Users className="w-6 h-6 text-primary-500" />
-                Followers ({business.followers.length})
+                {t('business.followers')} ({business.followers.length})
               </h3>
             </div>
 
@@ -452,7 +459,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
               <div className="text-center py-8">
                 <Users className="w-8 h-8 text-gray-300 mx-auto mb-3" />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  No followers yet. Be the first to follow!
+                  {t('business.noFollowers')}
                 </p>
               </div>
             )}
@@ -461,7 +468,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
           {/* About Section */}
           <Card className="p-8 rounded-[2rem]">
             <h3 className="text-lg font-black text-gray-900 dark:text-gray-100 mb-6 uppercase tracking-widest">
-              About Section
+              {t('business.aboutSection')}
             </h3>
             <div className="space-y-6">
               <div className="flex gap-4">
@@ -470,7 +477,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">
-                    Email Inquiry
+                    {t('business.emailInquiry')}
                   </p>
                   <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
                     {business.email}
@@ -483,7 +490,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] mb-1">
-                    Direct Dial
+                    {t('business.directDial')}
                   </p>
                   <p className="text-sm font-bold text-gray-700 dark:text-gray-300">
                     {business.phone}
@@ -498,37 +505,162 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
         <div className="lg:col-span-8 space-y-8">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
-              Timeline ({posts.length})
+              {t('business.timeline')} ({posts.length})
             </h2>
-            <div className="flex gap-2">
-              <Badge variant="primary" className="rounded-xl px-4 py-2">
-                ALL POSTS ({posts.length})
-              </Badge>
-              <Badge variant="gray" className="rounded-xl px-4 py-2 opacity-50">
-                MEDIA
-              </Badge>
+            <div className="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-2xl">
+              <button
+                onClick={() => setActiveTimelineTab('all')}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  activeTimelineTab === 'all'
+                    ? 'bg-white dark:bg-gray-900 text-primary-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                {t('business.allPosts')} ({posts.length})
+              </button>
+              <button
+                onClick={() => setActiveTimelineTab('media')}
+                className={`rounded-xl px-4 py-2 text-xs font-bold transition-all ${
+                  activeTimelineTab === 'media'
+                    ? 'bg-white dark:bg-gray-900 text-primary-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+              >
+                {t('business.media')} ({posts.reduce((acc, p) => acc + (p.media?.length || 0), 0)})
+              </button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            {posts.length > 0 ? (
-              posts.map((post) => <PostCard key={post._id} post={post} />)
-            ) : (
-              <Card className="p-20 text-center border-dashed border-2 bg-gray-50/50 dark:bg-gray-900/30">
-                <div className="p-5 bg-white dark:bg-gray-900 rounded-3xl w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-xl">
-                  <Building2 className="w-10 h-10 text-gray-300" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                  No updates yet
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-                  This business hasn't shared any posts yet. Follow them to be
-                  the first to see new updates.
-                </p>
-              </Card>
-            )}
-          </div>
+          {activeTimelineTab === 'all' ? (
+            <div className="grid grid-cols-1 gap-6">
+              {posts.length > 0 ? (
+                posts.map((post) => <PostCard key={post._id} post={post} />)
+              ) : (
+                <Card className="p-20 text-center border-dashed border-2 bg-gray-50/50 dark:bg-gray-900/30">
+                  <div className="p-5 bg-white dark:bg-gray-900 rounded-3xl w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-xl">
+                    <Building2 className="w-10 h-10 text-gray-300" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    {t('business.noUpdates')}
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                    {t('business.noUpdatesDesc')}
+                  </p>
+                </Card>
+              )}
+            </div>
+          ) : (
+            <div>
+              {(() => {
+                const mediaItems = posts.flatMap((p) => {
+                  if (!p.media || !Array.isArray(p.media)) return [];
+                  return p.media.map((item: any, i: number) => {
+                    const url = typeof item === 'string' ? item : item.url;
+                    const isVideo = item.type === 'video' || (typeof url === 'string' && url.match(/\.(mp4|webm|ogg|mov)$/i));
+                    return {
+                      id: `${p._id}-${i}`,
+                      url,
+                      isVideo,
+                      caption: p.content,
+                    };
+                  });
+                });
+
+                if (mediaItems.length === 0) {
+                  return (
+                    <Card className="p-16 text-center border-dashed border-2 bg-gray-50/50 dark:bg-gray-900/30">
+                      <div className="w-14 h-14 rounded-2xl bg-primary-50 dark:bg-primary-950/50 flex items-center justify-center mx-auto mb-3 text-primary-600">
+                        <Film className="w-7 h-7" />
+                      </div>
+                      <h3 className="font-bold text-gray-900 dark:text-gray-100 text-base mb-1">
+                        {t('profile.noMedia') || 'No media or videos yet'}
+                      </h3>
+                      <p className="text-xs text-gray-500 max-w-sm mx-auto">
+                        {t('profile.noMediaDesc') || 'Photos and videos shared in business posts will appear here.'}
+                      </p>
+                    </Card>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {mediaItems.map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedMedia(item)}
+                        className="group relative aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer shadow-sm hover:shadow-md transition-all hover:scale-[1.02]"
+                      >
+                        {item.isVideo ? (
+                          <div className="w-full h-full relative bg-gray-950 flex items-center justify-center">
+                            <video
+                              src={getFullUrl(item.url)}
+                              className="w-full h-full object-cover opacity-80"
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
+                              <div className="w-10 h-10 rounded-full bg-white/90 text-primary-600 flex items-center justify-center shadow-lg">
+                                <Play className="w-5 h-5 fill-current ml-0.5" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <img
+                            src={getFullUrl(item.url)}
+                            alt=""
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-end">
+                          <p className="text-white text-xs line-clamp-1 font-medium">{item.caption || 'Media'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
+
+        {/* Media Fullscreen Modal */}
+        {selectedMedia && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            onClick={() => setSelectedMedia(null)}
+          >
+            <div 
+              className="relative max-w-3xl w-full bg-black rounded-3xl overflow-hidden shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedMedia(null)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/60 text-white hover:bg-black transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex items-center justify-center max-h-[75vh] bg-black">
+                {selectedMedia.isVideo ? (
+                  <video
+                    src={getFullUrl(selectedMedia.url)}
+                    controls
+                    autoPlay
+                    className="max-h-[75vh] w-auto max-w-full"
+                  />
+                ) : (
+                  <img
+                    src={getFullUrl(selectedMedia.url)}
+                    alt=""
+                    className="max-h-[75vh] w-auto max-w-full object-contain"
+                  />
+                )}
+              </div>
+              {selectedMedia.caption && (
+                <div className="p-4 bg-gray-900 text-white text-xs">
+                  <p>{selectedMedia.caption}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       <AnimatePresence>
         {showEditProfile && business && (

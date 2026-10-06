@@ -10,8 +10,10 @@ import Card from '@/components/common/Card';
 import Spinner from '@/components/common/Spinner';
 import Badge from '@/components/common/Badge';
 import TrendChart, { TrendDataPoint } from '@/components/trend/TrendChart';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 export default function TrendingPage() {
+  const { t, isRTL } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [topics, setTopics] = useState<TrendingTopic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -57,25 +59,25 @@ export default function TrendingPage() {
       {/* Hero Header & Chart Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-12">
         <div className="xl:col-span-2 relative p-8 rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-primary-600 to-indigo-900 shadow-2xl shadow-primary-500/20 flex flex-col justify-center">
-          <div className="absolute top-0 right-0 p-8 opacity-10">
+          <div className="absolute top-0 end-0 p-8 opacity-10">
             <TrendingUp className="w-64 h-64" />
           </div>
           <div className="relative z-10">
             <Badge className="mb-4 bg-white/20 backdrop-blur-md text-white border-none py-1.5 px-4 rounded-full font-black uppercase tracking-widest text-[10px]">
-              Live Pulse Analytics
+              {t('trending.livePulse', 'Live Pulse Analytics')}
             </Badge>
             <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">
-              What's Trending <span className="text-primary-300">Today</span>
+              {t('trending.whatsToday', "What's Trending Today")}
             </h1>
             <p className="text-primary-100 text-lg max-w-2xl font-medium leading-relaxed">
-              Real-time insights into the most discussed professional topics and viral content across the BusinessNet ecosystem.
+              {t('trending.subtitle', 'Real-time insights into the most discussed professional topics and viral content across the MADA ecosystem.')}
             </p>
           </div>
         </div>
         <div className="xl:col-span-1">
           <TrendChart 
             data={chartData} 
-            title="Global Network Activity" 
+            title={t('trending.globalActivity', 'Global Network Activity')} 
             color="#6366F1"
           />
         </div>
@@ -94,7 +96,7 @@ export default function TrendingPage() {
             }`}
           >
             {cat.icon}
-            {cat.name}
+            {t(`categories.${cat.name}`, cat.name)}
           </button>
         ))}
       </div>
@@ -107,11 +109,11 @@ export default function TrendingPage() {
               <div className="p-2 bg-orange-500 rounded-lg text-white shadow-lg shadow-orange-500/20">
                 <Flame className="w-5 h-5" />
               </div>
-              <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Viral Content</h2>
+              <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('trending.viral', 'Viral Content')}</h2>
             </div>
             <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
               <span className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-              Live Updates
+              {t('trending.liveUpdates', 'Live Updates')}
             </div>
           </div>
           
@@ -124,7 +126,7 @@ export default function TrendingPage() {
                 className="flex flex-col items-center justify-center py-32 gap-6"
               >
                 <Spinner size="lg" />
-                <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">Scraping Network Waves...</p>
+                <p className="text-sm font-black uppercase tracking-[0.3em] text-gray-400">{t('trending.scraping', 'Scraping Network Waves...')}</p>
               </motion.div>
             ) : posts.length > 0 ? (
               <motion.div 
@@ -144,8 +146,8 @@ export default function TrendingPage() {
               >
                 <Card className="p-20 text-center border-none shadow-xl bg-white dark:bg-gray-950">
                   <Globe className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-6" />
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Silence in the Sphere</h3>
-                  <p className="text-gray-500 max-w-sm mx-auto font-medium">No trending posts found in this category right now. Be the first to start a conversation!</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('trending.silence', 'Silence in the Sphere')}</h3>
+                  <p className="text-gray-500 max-w-sm mx-auto font-medium">{t('trending.silenceDesc', 'No trending posts found in this category right now. Be the first to start a conversation!')}</p>
                 </Card>
               </motion.div>
             )}
@@ -160,8 +162,8 @@ export default function TrendingPage() {
                 <Zap className="w-5 h-5 fill-current" />
               </div>
               <div>
-                <h2 className="font-black text-xl text-gray-900 dark:text-gray-100 tracking-tight">Market Buzz</h2>
-                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Hottest Keywords</p>
+                <h2 className="font-black text-xl text-gray-900 dark:text-gray-100 tracking-tight">{t('trending.marketBuzz', 'Market Buzz')}</h2>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">{t('trending.hottest', 'Hottest Keywords')}</p>
               </div>
             </div>
             
@@ -213,7 +215,7 @@ export default function TrendingPage() {
                             </span>
                           )}
                        </div>
-                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] mt-1">Activity Index</p>
+                       <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em] mt-1">{t('trending.activityIndex', 'Activity Index')}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -225,14 +227,14 @@ export default function TrendingPage() {
                 <div className="p-2 bg-indigo-500 rounded-lg text-white shadow-lg shadow-indigo-500/20">
                   <Star className="w-4 h-4" />
                 </div>
-                <h3 className="font-black text-gray-900 dark:text-gray-100 tracking-tight text-lg">Rising Stars</h3>
+                <h3 className="font-black text-gray-900 dark:text-gray-100 tracking-tight text-lg">{t('trending.risingStars', 'Rising Stars')}</h3>
               </div>
-              <p className="text-sm text-gray-500 mb-6 font-medium leading-relaxed">Businesses with the highest reputation growth spikes this week across the global network.</p>
+              <p className="text-sm text-gray-500 mb-6 font-medium leading-relaxed">{t('trending.risingStarsDesc', 'Businesses with the highest reputation growth spikes this week across the global network.')}</p>
               <button 
                 onClick={() => window.location.href = '/business'}
                 className="w-full py-4 text-sm font-black uppercase tracking-widest text-white bg-primary-600 hover:bg-primary-700 rounded-2xl transition-all shadow-xl shadow-primary-500/20 active:scale-95"
               >
-                Explore Top Businesses
+                {t('trending.exploreTop', 'Explore Top Businesses')}
               </button>
             </div>
           </Card>

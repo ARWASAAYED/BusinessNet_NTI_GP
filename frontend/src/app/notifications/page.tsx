@@ -1,31 +1,42 @@
 "use client";
 
-import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, CheckCheck, MessageCircle, Heart, UserPlus, TrendingUp, Megaphone } from 'lucide-react';
-import { useNotifications } from '@/hooks/useNotifications';
-import { formatTimeAgo } from '@/utils/dateHelpers';
-import Avatar from '@/components/common/Avatar';
-import Card from '@/components/common/Card';
-import Spinner from '@/components/common/Spinner';
-import { useRouter } from 'next/navigation';
+import React, { useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Bell,
+  CheckCheck,
+  MessageCircle,
+  Heart,
+  UserPlus,
+  TrendingUp,
+  Megaphone,
+} from "lucide-react";
+import { useNotifications } from "@/hooks/useNotifications";
+import { formatTimeAgo } from "@/utils/dateHelpers";
+import Avatar from "@/components/common/Avatar";
+import Card from "@/components/common/Card";
+import Spinner from "@/components/common/Spinner";
+import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/layout/LanguageProvider";
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } =
+    useNotifications();
+  const { t, locale } = useLanguage();
   const router = useRouter();
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'comment':
+      case "comment":
         return <MessageCircle className="w-5 h-5 text-blue-500" />;
-      case 'like':
-      case 'upvote':
+      case "like":
+      case "upvote":
         return <Heart className="w-5 h-5 text-red-500" />;
-      case 'follow':
+      case "follow":
         return <UserPlus className="w-5 h-5 text-green-500" />;
-      case 'trending':
+      case "trending":
         return <TrendingUp className="w-5 h-5 text-orange-500" />;
-      case 'promotion':
+      case "promotion":
         return <Megaphone className="w-5 h-5 text-purple-500" />;
       default:
         return <Bell className="w-5 h-5 text-gray-500" />;
@@ -51,9 +62,11 @@ export default function NotificationsPage() {
               <Bell className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100">Notifications</h1>
+              <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100">
+                {t('notifications.title')}
+              </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                Stay updated with your activity
+                {t('notifications.subtitle')}
               </p>
             </div>
           </div>
@@ -63,14 +76,14 @@ export default function NotificationsPage() {
               className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-xl font-bold text-sm hover:bg-primary-600 transition-colors"
             >
               <CheckCheck className="w-4 h-4" />
-              Mark all as read
+              {t('notifications.markAllRead')}
             </button>
           )}
         </div>
         {unreadCount > 0 && (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+            {t(unreadCount === 1 ? 'notifications.unread' : 'notifications.unreadPlural', { count: unreadCount })}
           </div>
         )}
       </div>
@@ -79,14 +92,18 @@ export default function NotificationsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-20">
           <Spinner size="lg" />
-          <p className="mt-4 text-sm text-gray-500 font-medium">Loading notifications...</p>
+          <p className="mt-4 text-sm text-gray-500 font-medium">
+            {t('notifications.loading')}
+          </p>
         </div>
       ) : notifications.length === 0 ? (
         <Card className="p-20 text-center">
           <Bell className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">No notifications yet</h3>
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            {t('notifications.noNotifications')}
+          </h3>
           <p className="text-gray-500 max-w-sm mx-auto">
-            When you get notifications about your activity, they'll show up here.
+            {t('notifications.emptyDesc')}
           </p>
         </Card>
       ) : (
@@ -102,13 +119,15 @@ export default function NotificationsPage() {
                 onClick={() => handleNotificationClick(notification)}
                 className={`p-4 rounded-2xl cursor-pointer transition-all border ${
                   notification.isRead
-                    ? 'bg-white dark:bg-gray-950 border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700'
-                    : 'bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800/30 hover:bg-primary-100 dark:hover:bg-primary-900/30'
+                    ? "bg-white dark:bg-gray-950 border-gray-100 dark:border-gray-800 hover:border-gray-200 dark:hover:border-gray-700"
+                    : "bg-primary-50 dark:bg-primary-900/20 border-primary-100 dark:border-primary-800/30 hover:bg-primary-100 dark:hover:bg-primary-900/30"
                 }`}
               >
                 <div className="flex items-start gap-4">
                   {/* Icon */}
-                  <div className={`p-2 rounded-xl ${notification.isRead ? 'bg-gray-100 dark:bg-gray-900' : 'bg-white dark:bg-gray-950'}`}>
+                  <div
+                    className={`p-2 rounded-xl ${notification.isRead ? "bg-gray-100 dark:bg-gray-900" : "bg-white dark:bg-gray-950"}`}
+                  >
                     {getNotificationIcon(notification.type)}
                   </div>
 
@@ -116,7 +135,9 @@ export default function NotificationsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4 mb-1">
                       <div className="flex-1">
-                        <p className={`text-sm mb-1 ${notification.isRead ? 'text-gray-900 dark:text-gray-100' : 'text-gray-900 dark:text-white font-semibold'}`}>
+                        <p
+                          className={`text-sm mb-1 ${notification.isRead ? "text-gray-900 dark:text-gray-100" : "text-gray-900 dark:text-white font-semibold"}`}
+                        >
                           {notification.title || notification.message}
                         </p>
                         {notification.title && notification.message && (
@@ -129,14 +150,14 @@ export default function NotificationsPage() {
                         <span className="flex-shrink-0 w-2 h-2 bg-primary-500 rounded-full" />
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2 mt-2">
                       {notification.sender && (
                         <div className="flex items-center gap-2">
-                          <Avatar 
-                            src={notification.sender.avatar} 
-                            alt={notification.sender.username} 
-                            size="xs" 
+                          <Avatar
+                            src={notification.sender.avatar}
+                            alt={notification.sender.username}
+                            size="sm"
                           />
                           <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                             {notification.sender.username}
@@ -144,7 +165,7 @@ export default function NotificationsPage() {
                         </div>
                       )}
                       <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {formatTimeAgo(notification.createdAt)}
+                        {formatTimeAgo(notification.createdAt, locale)}
                       </span>
                     </div>
                   </div>

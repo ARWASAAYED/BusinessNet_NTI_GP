@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { signup, login, logout } = require("../controllers/authController");
 const auth = require("../middleware/authMiddleware");
+const optionalAuth = require("../middleware/optionalAuth");
 const commentController = require("../controllers/commentController");
 
 const postController = require("../controllers/postController");
@@ -34,7 +35,7 @@ router.put(
   userController.updateMyProfile
 );
 
-router.post("/comments", auth, commentController.createComment);
+router.post("/comments", optionalAuth, commentController.createComment);
 router.put("/comments/:id", auth, commentController.updateComment);
 router.delete("/comments/:id", auth, commentController.deleteComment);
 
@@ -46,9 +47,9 @@ router.delete("/comments/:id/like", auth, commentController.unlikeComment);
 router.get("/comments/:id/replies", commentController.getReplies);
 
 // Post Routes
-router.post("/posts", auth, uploadArray("media", 5), postController.createPost);
-router.get("/posts/search", auth, postController.searchPosts);
-router.get("/posts/feed", auth, postController.getPosts);
+router.post("/posts", optionalAuth, uploadArray("media", 5), postController.createPost);
+router.get("/posts/search", optionalAuth, postController.searchPosts);
+router.get("/posts/feed", optionalAuth, postController.getPosts);
 router.get("/posts/user/:userId", auth, userController.getUserPosts);
 router.get(
   "/posts/business/:businessId",
@@ -66,31 +67,35 @@ router.post("/posts/:id/vote", auth, postController.votePost);
 router.post("/posts/:id/like", auth, postController.upvotePost);
 router.delete("/posts/:id/like", auth, postController.downvotePost);
 router.post("/posts/:id/share", auth, postController.sharePost);
-router.post("/posts/:id/view", auth, postController.incrementView);
-router.get("/posts/:id", auth, postController.getPostById);
+router.post("/posts/:id/repost", auth, postController.repostPost);
+router.post("/posts/:id/view", optionalAuth, postController.incrementView);
+router.get("/posts/:id", optionalAuth, postController.getPostById);
 router.put("/posts/:id", auth, postController.updatePost);
 router.delete("/posts/:id", auth, postController.deletePost);
-router.post("/posts/:postId/comments", auth, commentController.createComment);
+router.post("/posts/:postId/comments", optionalAuth, commentController.createComment);
 
 // User Routes
-router.get("/users/search", auth, userController.searchUsers);
+router.get("/users/search", optionalAuth, userController.searchUsers);
 router.get("/users/feed", auth, userController.getUserFeed);
 router.get("/users/:id", auth, userController.getUserById);
 router.put("/users/:id", auth, userController.updateUserProfile);
 router.put("/users/:id/password", auth, userController.updatePassword);
 router.post("/users/:id/badges", auth, userController.assignBadgeToUser);
 router.post("/users/:id/follow", auth, userController.followUser);
+router.delete("/users/:id/follow", auth, userController.unfollowUser);
 router.post("/users/:id/unfollow", auth, userController.unfollowUser);
+router.get("/users/:id/followers", optionalAuth, userController.getFollowers);
+router.get("/users/:id/following", optionalAuth, userController.getFollowing);
 
 // Trend Routes
 router.get("/trends/topics", trendController.getTrendingTopics);
 router.get("/trends/posts", trendController.getTrendingPosts);
 
 // Business Routes
-router.get("/businesses/search", auth, businessController.searchBusinesses);
+router.get("/businesses/search", optionalAuth, businessController.searchBusinesses);
 router.get(
   "/businesses/category/:category",
-  auth,
+  optionalAuth,
   businessController.getBusinessesByCategory
 );
 router.get(
@@ -98,8 +103,8 @@ router.get(
   auth,
   businessController.getUserBusinesses
 );
-router.get("/businesses", auth, businessController.getAllBusinesses);
-router.get("/businesses/:id", auth, businessController.getBusinessProfile);
+router.get("/businesses", optionalAuth, businessController.getAllBusinesses);
+router.get("/businesses/:id", optionalAuth, businessController.getBusinessProfile);
 // Update business profile with proper middleware for fields
 router.put(
   "/businesses/:id",
@@ -111,6 +116,8 @@ router.put(
   businessController.updateBusinessProfile
 );
 router.post("/businesses/:id/follow", auth, businessController.followBusiness);
+router.delete("/businesses/:id/follow", auth, businessController.unfollowBusiness);
+router.post("/businesses/:id/unfollow", auth, businessController.unfollowBusiness);
 router.post("/businesses/:id/offerings", auth, businessController.addOffering);
 router.delete(
   "/businesses/:id/offerings/:offeringId",
@@ -136,10 +143,10 @@ router.get(
 
 // Community Routes
 const communityController = require("../controllers/communityController");
-router.get("/communities/search", auth, communityController.searchCommunities);
+router.get("/communities/search", optionalAuth, communityController.searchCommunities);
 router.get(
   "/communities/category/:category",
-  auth,
+  optionalAuth,
   communityController.getCommunitiesByCategory
 );
 router.get(
@@ -147,8 +154,8 @@ router.get(
   auth,
   communityController.getUserCommunities
 );
-router.get("/communities", auth, communityController.getCommunities);
-router.get("/communities/:id", auth, communityController.getCommunity);
+router.get("/communities", optionalAuth, communityController.getCommunities);
+router.get("/communities/:id", optionalAuth, communityController.getCommunity);
 router.post(
   "/communities",
   auth,
@@ -263,9 +270,16 @@ router.get("/keywords/:id", auth, keywordController.getKeywordStats);
 router.put("/keywords/:id", auth, keywordController.updateKeywordStats);
 
 // Duel Routes
-router.post("/duels", auth, duelController.createDuel);
-router.get("/duels", auth, duelController.listDuels);
-router.post("/duels/:id/accept", auth, duelController.acceptDuel);
+router.post("/duels", auth, uploadArray("media", 5), duelController.createDuel);
+router.get("/duels", optionalAuth, duelController.listDuels);
+router.get("/duels/:id", optionalAuth, duelController.getDuelById);
+router.post(
+  "/duels/:id/accept",
+  auth,
+  uploadArray("media", 5),
+  duelController.acceptDuel
+);
 router.post("/duels/:id/vote", auth, duelController.voteInDuel);
+router.post("/duels/:id/finalize", auth, duelController.finalizeDuel);
 
 module.exports = router;

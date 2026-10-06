@@ -13,8 +13,9 @@ export const useComments = (postId: string) => {
       setIsLoading(true);
       setError(null);
       const data = await commentService.getCommentsByPost(postId);
+      const list = Array.isArray(data) ? data : [];
       // Backend might return nested or flat. Organizing into threads (top-level only)
-      const topLevelComments = data.filter((comment: Comment) => !comment.parentId);
+      const topLevelComments = list.filter((comment: any) => !comment.parentId && !comment.parent);
       setComments(topLevelComments);
     } catch (err: any) {
       setError(err.message || 'Failed to load comments');
@@ -23,21 +24,25 @@ export const useComments = (postId: string) => {
     }
   }, [postId]);
 
-  const handleNewComment = useCallback((newComment: Comment) => {
-    if (newComment.postId !== postId) return;
+  // Backend returns either postId or post field - handle both
+  const getCommentPostId = (comment: any) => comment.postId || comment.post;
+
+  const handleNewComment = useCallback((newComment: any) => {
+    if (String(getCommentPostId(newComment)) !== String(postId)) return;
     
     if (!newComment.parentId) {
-      setComments(prev => [newComment, ...prev]);
+      setComments(prev => {
+        // Avoid duplicates
+        if (prev.find(c => c._id === newComment._id)) return prev;
+        return [newComment, ...prev];
+      });
     } else {
-      // If it's a reply, it would ideally be handled by refreshing or 
-      // by deep updating the parent comment in state. 
-      // For simplicity in flat state, we might just re-fetch or find parent.
       loadComments(); 
     }
   }, [postId, loadComments]);
 
-  const handleUpdateComment = useCallback((updatedComment: Comment) => {
-    if (updatedComment.postId !== postId) return;
+  const handleUpdateComment = useCallback((updatedComment: any) => {
+    if (String(getCommentPostId(updatedComment)) !== String(postId)) return;
     setComments(prev => prev.map(c => c._id === updatedComment._id ? updatedComment : c));
   }, [postId]);
 
@@ -66,21 +71,39 @@ export const useComments = (postId: string) => {
       content,
       parentId,
     });
-    // Socket will broadcast this so we don't necessarily need to add it manually
-    // but optimistic update is better.
+    // Optimistically add to state immediately so user sees it right away
+    if (!parentId) {
+      setComments(prev => {
+        if (prev.find(c => c._id === newComment._id)) return prev;
+        return [newComment, ...prev];
+      });
+    } else {
+      // Reload to get the updated thread with replies
+      loadComments();
+    }
     return newComment;
   };
 
   const deleteComment = async (commentId: string) => {
-    await commentService.deleteComment(commentId);
+    // Optimistic removal
+    setComments(prev => prev.filter(c => c._id !== commentId));
+    try {
+      await commentService.deleteComment(commentId);
+    } catch (err) {
+      // Revert on error
+      loadComments();
+      throw err;
+    }
   };
 
   const likeComment = async (commentId: string) => {
-    await commentService.likeComment(commentId);
+    const result = await commentService.likeComment(commentId);
+    if (result) setComments(prev => prev.map(c => c._id === commentId ? result : c));
   };
 
   const unlikeComment = async (commentId: string) => {
-    await commentService.unlikeComment(commentId);
+    const result = await commentService.unlikeComment(commentId);
+    if (result) setComments(prev => prev.map(c => c._id === commentId ? result : c));
   };
 
   return {

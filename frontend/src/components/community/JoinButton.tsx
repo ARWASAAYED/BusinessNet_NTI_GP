@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { UserPlus, UserMinus, Check } from 'lucide-react';
 import Button from '../common/Button';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 interface JoinButtonProps {
   communityId: string;
@@ -22,6 +23,7 @@ export default function JoinButton({
   onLeave,
   variant = 'default',
 }: JoinButtonProps) {
+  const { t } = useLanguage();
   const [isJoined, setIsJoined] = useState(isMember);
   const [isLoading, setIsLoading] = useState(false);
   const [currentMemberCount, setCurrentMemberCount] = useState(memberCount);
@@ -64,12 +66,12 @@ export default function JoinButton({
         ) : isJoined ? (
           <>
             <Check className="w-4 h-4" />
-            Joined
+            {t('communities.joined')}
           </>
         ) : (
           <>
             <UserPlus className="w-4 h-4" />
-            Join
+            {t('communities.join')}
           </>
         )}
       </motion.button>
@@ -87,19 +89,19 @@ export default function JoinButton({
         {isJoined ? (
           <>
             <UserMinus className="w-4 h-4" />
-            Leave Community
+            {t('communities.leave')}
           </>
         ) : (
           <>
             <UserPlus className="w-4 h-4" />
-            Join Community
+            {t('communities.joinCommunity')}
           </>
         )}
       </Button>
 
       {currentMemberCount > 0 && (
         <span className="text-sm text-gray-600 dark:text-gray-400">
-          {currentMemberCount.toLocaleString()} {currentMemberCount === 1 ? 'member' : 'members'}
+          {currentMemberCount.toLocaleString()} {t('communities.members')}
         </span>
       )}
     </div>

@@ -8,8 +8,11 @@ const Category = require("../models/category");
 const Hashtag = require("../models/hashtag");
 const Keyword = require("../models/keyword");
 const Trend = require("../models/trend");
+const Community = require("../models/Community");
+const CommunityMember = require("../models/communityMember");
 // const PostHashtag = require("../models/postHashtag");
 const Badge = require("../models/badge");
+const { getOrCreateGuestUser } = require("../utils/guestHelper");
 
 /**
  * Helper to ensure a string is a valid MongoDB ObjectId or return null.
@@ -29,11 +32,27 @@ const formatPost = (post) => {
   const author = p.authorId;
   const business = p.businessId;
 
+  const community = p.communityId;
+  const originalPost = p.originalPost;
+
   delete p.authorId;
   delete p.businessId;
+  delete p.communityId;
 
   return {
     ...p,
+    community: community && typeof community === 'object' && community.name
+      ? {
+          _id: community._id,
+          name: community.name,
+          category: community.category,
+          avatarUrl: community.avatarUrl,
+          isPrivate: community.isPrivate,
+        }
+      : null,
+    originalPost: originalPost && typeof originalPost === 'object'
+      ? formatPost(originalPost)
+      : null,
     author: author
       ? {
           _id: author._id,
@@ -42,7 +61,13 @@ const formatPost = (post) => {
           avatar: author.avatarUrl,
           accountType: author.accountType,
         }
-      : null,
+      : {
+          _id: "guest",
+          username: "Guest",
+          fullName: "Guest User",
+          avatar: "https://api.dicebear.com/7.x/bottts/svg?seed=Guest",
+          accountType: "personal",
+        },
     business: business
       ? {
           _id: business._id,
@@ -53,6 +78,7 @@ const formatPost = (post) => {
     commentCount: p.commentsCount || 0, // Map commentsCount to commentCount for frontend
     shareCount: p.shareCount || 0,
     impressions: p.impressions || 0,
+    uniqueViews: p.uniqueViews || 0,
   };
 };
 
@@ -60,10 +86,9 @@ const formatPost = (post) => {
  * Extracts hashtags from content string and upserts them to DB as Hashtags AND Keywords
  * Returns array of Hashtag ObjectIds
  */
-const extractAndUpsertHashtags = async (content, postId = null, aiAnalysis = {}) => {
-  if (!content) return [];
-  
-  const regex = /#(\w+)/g;
+const extractAndUpsertHashtags = async (content, postId = null, aiAnalysis = {}, postCategory = 'General') => {
+  // Support English, Arabic (\u0600-\u06FF), numbers, and underscores
+  const regex = /#([a-zA-Z0-9_\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+)/g;
   const matches = content.match(regex);
   
   if (!matches) return [];
@@ -98,6 +123,9 @@ const extractAndUpsertHashtags = async (content, postId = null, aiAnalysis = {})
         if (keyword) {
             keyword.frequency += 1;
             keyword.lastUpdated = Date.now();
+            if (!keyword.category || keyword.category === 'General') {
+                keyword.category = postCategory;
+            }
             // Update sentiment avg
             if (aiAnalysis.sentimentScore) {
                 const oldTotal = keyword.avgSentiment * (keyword.frequency - 1);
@@ -108,6 +136,7 @@ const extractAndUpsertHashtags = async (content, postId = null, aiAnalysis = {})
         } else {
             const newKey = await Keyword.create({
                 word: tagName,
+                category: postCategory,
                 frequency: 1,
                 avgSentiment: aiAnalysis.sentimentScore || 0,
                 lastUpdated: Date.now()
@@ -169,17 +198,14 @@ exports.createPost = async (req, res, next) => {
     console.log('Create Post Files:', req.files);
     console.log('User:', req.user ? req.user._id : 'No User');
 
-    if (!req.user) {
-        return res.status(401).json({ success: false, message: "User not authenticated" });
+    let authorUser = req.user;
+    if (!authorUser) {
+      authorUser = await getOrCreateGuestUser();
     }
 
     const media = [];
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
-        // Construct a path that works both locally and in production
-        // Local path usually needs the host, but we can also store relative paths 
-        // if the frontend handles the base URL. For now, let's keep the full URL logic 
-        // but ensure it's clean.
         const host = req.get("host");
         const fullUrl = `${req.protocol}://${host}/uploads/${file.filename}`;
         
@@ -201,34 +227,25 @@ exports.createPost = async (req, res, next) => {
         }
     }
 
-    // AI Analysis
-    let aiAnalysis = {};
-    try {
-        console.log('Analyzing content for:', req.user._id);
-        aiAnalysis = await aiService.analyzeContent(content);
-        console.log('AI Analysis Result:', aiAnalysis);
-    } catch (aiError) {
-        console.error("AI Analysis failed:", aiError);
-        aiAnalysis = {
-            sentimentScore: 0,
-            professionalismScore: 50,
-            authenticityScore: 1,
-            relevanceScore: 0,
-            aiKeywords: [],
-            detectedIndustry: "General"
-        };
-    }
+    // Fast content scoring
+    let aiAnalysis = {
+        sentimentScore: 0,
+        professionalismScore: 75,
+        authenticityScore: 1,
+        relevanceScore: 80,
+        aiKeywords: [],
+        detectedIndustry: "General"
+    };
 
     // Defensive ID checks to prevent CastError
-    const targetBusinessId = cleanObjectId(businessId) || cleanObjectId(req.user.businessId);
+    const targetBusinessId = cleanObjectId(businessId) || (authorUser.businessId ? cleanObjectId(authorUser.businessId) : null);
     const targetCommunityId = cleanObjectId(communityId);
     let targetCategoryId = cleanObjectId(req.body.category) || cleanObjectId(categoryId);
 
-    // Create post first to get ID for hashtag association
-    // Only spread fields from aiAnalysis that exist in the Post schema
+    // Create post
     const postData = {
       content,
-      authorId: req.user._id,
+      authorId: authorUser._id,
       media,
       categoryId: targetCategoryId,
       tag: !targetCategoryId ? (req.body.category || tag || "General") : tag,
@@ -245,22 +262,15 @@ exports.createPost = async (req, res, next) => {
 
     const post = await Post.create(postData);
 
-    // Extract and link hashtags (both from content and explicit)
-    const extractedHashtags = await extractAndUpsertHashtags(content, post._id, aiAnalysis);
+    // Extract and link hashtags
+    const postCategory = postData.tag || req.body.category || 'General';
+    const extractedHashtags = await extractAndUpsertHashtags(content, post._id, aiAnalysis, postCategory);
     
-    // Process explicit hashtags if any
     let explicitHashtagIds = [];
     if (explicitHashtags.length > 0) {
-        // reuse extractAndUpsertHashtags logic or similar, but for specific tags
-        // For now, let's just append them to content for extraction or handle them similarly
-        // Simpler: iterate and upsert
         for (const tag of explicitHashtags) {
              const cleanTag = tag.replace('#', '').toLowerCase();
-             // Logic to find/create hashtag manually if not in content
-             // ... We can probably just rely on extractAndUpsertHashtags if we append them to content? 
-             // modifying content in DB might not be desired. 
-             // Let's just run extraction on them as if they were content " #tag #tag"
-             const ids = await extractAndUpsertHashtags(`#${cleanTag}`, post._id, {});
+             const ids = await extractAndUpsertHashtags(`#${cleanTag}`, post._id, {}, postCategory);
              explicitHashtagIds = [...explicitHashtagIds, ...ids];
         }
     }
@@ -277,13 +287,25 @@ exports.createPost = async (req, res, next) => {
       await reputationService.updateBusinessMetrics(targetBusinessId);
     }
 
-    // Check for user badges
     const io = req.app.get("io");
-    await badgeService.checkAndAwardBadges(req.user._id, io);
+
+    // Check for user badges if real authenticated user
+    if (req.user) {
+      await badgeService.checkAndAwardBadges(req.user._id, io);
+    }
 
     const populatedPost = await Post.findById(post._id)
       .populate("authorId", "username fullName avatarUrl accountType")
       .populate("businessId", "name avatarUrl")
+      .populate("communityId", "name category avatarUrl isPrivate")
+      .populate({
+        path: "originalPost",
+        populate: [
+          { path: "authorId", select: "username fullName avatarUrl accountType" },
+          { path: "businessId", select: "name avatarUrl" },
+          { path: "communityId", select: "name category avatarUrl isPrivate" }
+        ]
+      })
       .populate("hashtags", "name count");
 
     const formattedPost = formatPost(populatedPost);
@@ -312,15 +334,61 @@ exports.getPosts = async (req, res, next) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const posts = await Post.find()
+    // Filter private communities: non-members cannot see private community posts in the general feed
+    const privateCommunities = await Community.find({ isPrivate: true }).select("_id");
+    let excludedCommunityIds = privateCommunities.map((c) => c._id);
+
+    if (req.user) {
+      const userMemberships = await CommunityMember.find({
+        userId: req.user._id,
+        communityId: { $in: excludedCommunityIds }
+      }).select("communityId");
+      const allowedCommunityIds = new Set(userMemberships.map((m) => m.communityId.toString()));
+      const userCreated = await Community.find({ creatorId: req.user._id, isPrivate: true }).select("_id");
+      userCreated.forEach((c) => allowedCommunityIds.add(c._id.toString()));
+
+      excludedCommunityIds = excludedCommunityIds.filter(
+        (id) => !allowedCommunityIds.has(id.toString())
+      );
+    }
+
+    const query = excludedCommunityIds.length > 0 
+      ? { communityId: { $nin: excludedCommunityIds } } 
+      : {};
+
+    // Auto-expire outdated promotions asynchronously
+    (async () => {
+      try {
+        const Promotion = require("../models/promotion");
+        const expiredPromos = await Promotion.find({ status: 'active', endDate: { $lte: new Date() } });
+        if (expiredPromos.length > 0) {
+          const expiredPostIds = expiredPromos.map(p => p.postId);
+          await Promotion.updateMany({ _id: { $in: expiredPromos.map(p => p._id) } }, { $set: { status: 'completed' } });
+          await Post.updateMany({ _id: { $in: expiredPostIds } }, { $set: { isPromoted: false } });
+        }
+      } catch (e) {
+        // non-blocking
+      }
+    })();
+
+    const posts = await Post.find(query)
       .populate("authorId", "username fullName avatarUrl accountType")
       .populate("businessId", "name avatarUrl")
+      .populate("communityId", "name category avatarUrl isPrivate")
       .populate("categoryId", "name")
+      .populate({
+        path: "originalPost",
+        populate: [
+          { path: "authorId", select: "username fullName avatarUrl accountType" },
+          { path: "businessId", select: "name avatarUrl" },
+          { path: "communityId", select: "name category avatarUrl isPrivate" }
+        ]
+      })
       .sort({ isPromoted: -1, createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    const total = await Post.countDocuments();
+    const total = await Post.countDocuments(query);
 
     res.json({
       success: true,
@@ -345,8 +413,17 @@ exports.getPostById = async (req, res, next) => {
     const post = await Post.findById(req.params.id)
       .populate("authorId", "username fullName avatarUrl accountType")
       .populate("businessId", "name avatarUrl")
+      .populate("communityId", "name category avatarUrl isPrivate")
       .populate("hashtags", "name")
-      .populate("categoryId", "name");
+      .populate("categoryId", "name")
+      .populate({
+        path: "originalPost",
+        populate: [
+          { path: "authorId", select: "username fullName avatarUrl accountType" },
+          { path: "businessId", select: "name avatarUrl" },
+          { path: "communityId", select: "name category avatarUrl isPrivate" }
+        ]
+      });
 
     if (!post) {
       return res.status(404).json({
@@ -355,8 +432,18 @@ exports.getPostById = async (req, res, next) => {
       });
     }
 
-    post.uniqueViews += 1;
+    // Track views
+    const userId = req.user?._id;
     post.impressions += 1;
+    
+    if (userId) {
+      if (!post.viewerIds) post.viewerIds = [];
+      if (!post.viewerIds.includes(userId)) {
+        post.viewerIds.push(userId);
+        post.uniqueViews = post.viewerIds.length;
+      }
+    }
+    
     await post.save();
 
     res.json({
@@ -675,26 +762,112 @@ exports.sharePost = async (req, res, next) => {
   }
 };
 
+exports.repostPost = async (req, res, next) => {
+  try {
+    const originalPostId = req.params.id;
+    const { content = "" } = req.body;
+    const originalPost = await Post.findById(originalPostId);
+    if (!originalPost) {
+      return res.status(404).json({ success: false, message: "Original post not found" });
+    }
+
+    const targetOriginalId = originalPost.isRepost && !originalPost.content && originalPost.originalPost
+      ? originalPost.originalPost
+      : originalPost._id;
+
+    const repost = await Post.create({
+      authorId: req.user._id,
+      content,
+      originalPost: targetOriginalId,
+      isRepost: true,
+      category: originalPost.category || "General",
+    });
+
+    originalPost.shareCount = (originalPost.shareCount || 0) + 1;
+    await originalPost.save();
+
+    const authorTargetId = originalPost.authorId?._id || originalPost.authorId;
+    if (authorTargetId && authorTargetId.toString() !== req.user._id.toString()) {
+      try {
+        const Notification = require("../models/Notification");
+        const notification = await Notification.create({
+          userId: authorTargetId,
+          sender: req.user._id,
+          type: "share",
+          title: "New Repost",
+          message: `${req.user.fullName || req.user.username || "Someone"} reposted your post`,
+          link: `/feed?post=${repost._id}`,
+          referenceId: repost._id,
+        });
+        const io = req.app.get("io");
+        if (io) {
+          io.to(authorTargetId.toString()).emit("notification", notification);
+        }
+      } catch (notifier) {
+        console.error("Failed to send repost notification:", notifier);
+      }
+    }
+
+    const populatedRepost = await Post.findById(repost._id)
+      .populate("authorId", "username fullName avatarUrl accountType")
+      .populate("businessId", "name avatarUrl")
+      .populate("communityId", "name category avatarUrl isPrivate")
+      .populate({
+        path: "originalPost",
+        populate: [
+          { path: "authorId", select: "username fullName avatarUrl accountType" },
+          { path: "businessId", select: "name avatarUrl" },
+          { path: "communityId", select: "name category avatarUrl isPrivate" }
+        ]
+      });
+
+    const formatted = formatPost(populatedRepost);
+    const io = req.app.get("io");
+    if (io) {
+      io.emit("post:new", formatted);
+    }
+
+    res.status(201).json({ success: true, data: formatted });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.incrementView = async (req, res, next) => {
   try {
-    const post = await Post.findByIdAndUpdate(
-      req.params.id,
-      { $inc: { impressions: 1 } },
-      { new: true }
-    ).populate('hashtags');
-    
+    const postId = req.params.id;
+    const userId = req.user?._id;
+
+    const post = await Post.findById(postId);
     if (!post) return res.status(404).json({ message: "Post not found" });
 
+    // Always increment impressions (total views)
+    post.impressions += 1;
+
+    // Track unique views if user is authenticated
+    if (userId) {
+      const alreadyViewed = post.viewerIds && post.viewerIds.includes(userId);
+      if (!alreadyViewed) {
+        if (!post.viewerIds) post.viewerIds = [];
+        post.viewerIds.push(userId);
+        post.uniqueViews = post.viewerIds.length;
+      }
+    }
+
+    await post.save();
+    
+    // Populate hashtags for trend boosting (re-fetching populated for logic)
+    const populated = await Post.findById(postId).populate('hashtags');
+
     // Dynamic Trend Boosting: Views increase trend score
-    if (post.hashtags && post.hashtags.length > 0) {
+    if (populated.hashtags && populated.hashtags.length > 0) {
         // Fire and forget (don't await to keep UI fast)
         (async () => {
             try {
-                for (const tag of post.hashtags) {
-                    // Match Hashtag -> Keyword -> Trend
+                for (const tag of populated.hashtags) {
                     const keyword = await Keyword.findOne({ word: tag.name });
                     if (keyword) {
-                         // View = 0.5 points (High impact for "views to be in trending")
+                         // View = 0.5 points
                          await Trend.updateOne(
                              { keywordId: keyword._id }, 
                              { $inc: { score: 0.5, velocity: 1 } }
@@ -706,9 +879,39 @@ exports.incrementView = async (req, res, next) => {
             }
         })();
     }
+
+    // Dynamic Promotion Tracking: increment promotion impression analytics and deduct budget
+    if (post.isPromoted) {
+      (async () => {
+        try {
+          const Promotion = require("../models/promotion");
+          const activePromo = await Promotion.findOne({ postId, status: 'active' });
+          if (activePromo) {
+            const costPerImpression = 0.005; // $0.005 per impression (~$5 CPM)
+            const newSpent = Math.min(activePromo.budget, (activePromo.spent || 0) + costPerImpression);
+            const isCompleted = newSpent >= activePromo.budget || new Date(activePromo.endDate) <= new Date();
+
+            activePromo.analytics = activePromo.analytics || { impressions: 0, clicks: 0, conversions: 0 };
+            activePromo.analytics.impressions = (activePromo.analytics.impressions || 0) + 1;
+            activePromo.spent = Number(newSpent.toFixed(3));
+
+            if (isCompleted) {
+              activePromo.status = 'completed';
+              await Post.findByIdAndUpdate(postId, { isPromoted: false });
+            }
+            await activePromo.save();
+          }
+        } catch (promoErr) {
+          console.error("Error updating promotion impression:", promoErr);
+        }
+      })();
+    }
     
-    // We don't return the full post to save bandwidth, just success
-    res.json({ success: true, views: post.impressions });
+    res.json({ 
+      success: true, 
+      views: post.impressions,
+      uniqueViews: post.uniqueViews 
+    });
   } catch (error) {
     next(error);
   }
@@ -725,25 +928,26 @@ exports.searchPosts = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Search query is required" });
     }
 
-    const regex = new RegExp(q, 'i');
+    const cleanQ = q.replace(/^#+/, '').trim();
+    const regex = new RegExp(cleanQ || q, 'i');
+    const rawRegex = new RegExp(q, 'i');
     
-    // Find matching hashtags if query starts with #
-    let hashtagIds = [];
-    if (q.startsWith('#')) {
-      const tagName = q.substring(1);
-      const hashtags = await Hashtag.find({ name: new RegExp(`^${tagName}$`, 'i') });
-      hashtagIds = hashtags.map(h => h._id);
-    } else {
-      // Also look for keywords in content even if no #
-      const hashtags = await Hashtag.find({ name: regex });
-      hashtagIds = hashtags.map(h => h._id);
-    }
+    // Find matching hashtags either by exact name or substring
+    const hashtags = await Hashtag.find({
+      $or: [
+        { name: new RegExp(`^${cleanQ}$`, 'i') },
+        { name: regex }
+      ]
+    });
+    const hashtagIds = hashtags.map(h => h._id);
 
     const query = {
       $or: [
         { content: regex },
+        { content: rawRegex },
         { hashtags: { $in: hashtagIds } },
-        { tag: regex }
+        { tag: regex },
+        { aiKeywords: regex }
       ]
     };
 
@@ -802,7 +1006,7 @@ exports.updatePost = async (req, res, next) => {
       post.relevanceScore = aiAnalysis.relevanceScore;
       post.aiKeywords = aiAnalysis.aiKeywords;
 
-      const hashtagIds = await extractAndUpsertHashtags(content, post._id, aiAnalysis);
+      const hashtagIds = await extractAndUpsertHashtags(content, post._id, aiAnalysis, post.tag || 'General');
       post.hashtags = hashtagIds;
     }
 
@@ -837,13 +1041,17 @@ exports.deletePost = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user._id;
 
+    if (!id || !require("mongoose").Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid post ID" });
+    }
+
     const post = await Post.findById(id);
     if (!post) {
       return res.status(404).json({ success: false, message: "Post not found" });
     }
 
-    // Authorization check
-    if (post.authorId.toString() !== userId.toString()) {
+    // Authorization check — skip if authorId is null (guest post) to avoid crash
+    if (post.authorId && post.authorId.toString() !== userId.toString()) {
       return res.status(403).json({ success: false, message: "Not authorized to delete this post" });
     }
 

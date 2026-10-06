@@ -8,6 +8,7 @@ import messageService from '@/services/messageService';
 import Avatar from '../common/Avatar';
 import Input from '../common/Input';
 import Spinner from '../common/Spinner';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 interface NewChatModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface NewChatModalProps {
 }
 
 const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onSelectConversation }) => {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +69,7 @@ const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onSelectCo
         className="bg-white dark:bg-gray-950 w-full max-w-md rounded-3xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800"
       >
         <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">New Message</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('messages.newConversation')}</h2>
           <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-900 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -75,13 +77,13 @@ const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onSelectCo
 
         <div className="p-6">
           <div className="relative mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
             <Input
               type="text"
-              placeholder="Search people by username or name..."
+              placeholder={t('messages.searchUsers')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-10"
               autoFocus
             />
           </div>
@@ -101,7 +103,7 @@ const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onSelectCo
                   <button
                     key={user._id}
                     onClick={() => handleStartChat(user._id)}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all text-left group"
+                    className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all text-start group"
                   >
                     <Avatar src={user.avatar} alt={user.username} size="md" />
                     <div className="flex-1 min-w-0">
@@ -114,11 +116,11 @@ const NewChatModal: React.FC<NewChatModalProps> = ({ isOpen, onClose, onSelectCo
               </div>
             ) : searchQuery.trim().length >= 2 ? (
               <div className="text-center py-8 text-gray-500">
-                No users found for "{searchQuery}"
+                {t('messages.noUsersFound')} "{searchQuery}"
               </div>
             ) : (
               <div className="text-center py-8 text-gray-400 text-sm">
-                Search for someone to start a conversation
+                {t('messages.searchToStart')}
               </div>
             )}
           </div>

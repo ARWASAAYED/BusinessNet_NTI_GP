@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState } from 'react';
 import Image from 'next/image';
 
 interface AvatarProps {
@@ -43,18 +46,21 @@ const Avatar: React.FC<AvatarProps> = ({
   const altText = alt || 'User';
   const initials = altText.substring(0, 2).toUpperCase();
 
+  const [imageError, setImageError] = useState(false);
+
   return (
     <div
       className={`relative flex shrink-0 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 ${sizeMap[size]} ${className}`}
     >
-      {resolvedSrc && isValidUrl ? (
+      {resolvedSrc && isValidUrl && !imageError ? (
         <Image
           src={resolvedSrc}
           alt={altText}
           width={pixelSizeMap[size]}
           height={pixelSizeMap[size]}
           className="aspect-square h-full w-full object-cover"
-          unoptimized={resolvedSrc.includes('ui-avatars.com') || resolvedSrc.includes('localhost')} // unoptimized for local dev/external
+          unoptimized
+          onError={() => setImageError(true)}
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white font-semibold uppercase">

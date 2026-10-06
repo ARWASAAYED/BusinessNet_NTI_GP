@@ -46,7 +46,7 @@ const ToastItem: React.FC<ToastProps> = ({ toast, onClose }) => {
       initial={{ opacity: 0, x: 100 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 100 }}
-      className={`toast border ${bgColors[toast.type]} rounded-lg shadow-lg p-4 min-w-[300px] max-w-md`}
+      className={`toast pointer-events-auto border ${bgColors[toast.type]} rounded-lg shadow-lg p-4 min-w-[300px] max-w-md`}
     >
       <div className="flex items-start gap-3">
         {icons[toast.type]}
@@ -69,7 +69,7 @@ interface ToastContainerProps {
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onClose }) => {
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2">
+    <div className="fixed bottom-6 inset-inline-end-6 z-[200] flex flex-col gap-2 pointer-events-none">
       <AnimatePresence>
         {toasts.map((toast) => (
           <ToastItem key={toast.id} toast={toast} onClose={onClose} />

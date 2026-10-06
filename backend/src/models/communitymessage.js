@@ -12,7 +12,7 @@ const communityMessageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    content: { type: String, required: true },
+    content: { type: String, default: "" },
     media: [
       {
         type: { type: String, enum: ["image", "video"], default: "image" },

@@ -8,7 +8,7 @@ export const useNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const { token, user } = useAuthStore();
-  const { on, off, emit } = useSocket();
+  const { on, off, emit, isConnected } = useSocket();
 
   const addNotification = useCallback((notification: Notification) => {
     setNotifications(prev => {
@@ -22,13 +22,18 @@ export const useNotifications = () => {
   }, []);
 
   useEffect(() => {
-    if (!user) return; // Don't load if not logged in
+    const userId = user?.id || user?._id;
+    if (!userId || !token) return;
 
-    const userId = user.id || user._id;
-    if (userId) {
+    if (isConnected) {
       console.log('Joining socket room:', userId);
       emit('join', userId);
     }
+  }, [isConnected, user, token, emit]);
+
+  useEffect(() => {
+    const userId = user?.id || user?._id;
+    if (!userId || !token) return;
 
     loadNotifications();
     loadUnreadCount();
@@ -42,7 +47,7 @@ export const useNotifications = () => {
     return () => {
       off('notification');
     };
-  }, [on, off, emit, addNotification, user]);
+  }, [on, off, addNotification, user, token]);
 
   const loadNotifications = async () => {
     try {

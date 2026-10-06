@@ -8,6 +8,8 @@ import Dropdown from '../common/Dropdown';
 import CommentForm from './CommentForm';
 import { Comment } from '@/services/commentService';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/components/layout/LanguageProvider';
+import { formatTimeAgo } from '@/utils/dateHelpers';
 
 interface CommentItemProps {
   comment: Comment;
@@ -27,22 +29,26 @@ const CommentItem: React.FC<CommentItemProps> = ({
   depth = 0,
 }) => {
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const userId = user?.id || user?._id || '';
   const [isLiked, setIsLiked] = useState(
-    user ? comment.likes.includes(userId) : false
+    user && Array.isArray(comment.likes) ? comment.likes.includes(userId) : false
   );
   const [likesCount, setLikesCount] = useState(comment.likes?.length || 0);
 
-  const isOwner = userId === comment.userId._id || userId === comment.userId.id;
+  const isOwner = Boolean(
+    user && comment.userId &&
+    (userId === comment.userId._id || userId === comment.userId.id)
+  );
   const maxDepth = 3;
 
   const handleLike = () => {
     if (!user) return;
     
     setIsLiked(!isLiked);
-    setLikesCount(isLiked ? likesCount - 1 : likesCount + 1);
+    setLikesCount(isLiked ? Math.max(0, likesCount - 1) : likesCount + 1);
     onLike?.(comment._id);
   };
 
@@ -57,34 +63,26 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this comment?')) {
+    if (window.confirm(t('common.deleteConfirm') || 'Are you sure you want to delete this comment?')) {
       onDelete?.(comment._id);
     }
   };
 
-  const formatTimestamp = (date: string) => {
-    const now = new Date();
-    const commentDate = new Date(date);
-    const diffInSeconds = Math.floor((now.getTime() - commentDate.getTime()) / 1000);
-
-    if (diffInSeconds < 60) return 'just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-    
-    return commentDate.toLocaleDateString();
+  const formatTimestamp = (date?: string) => {
+    if (!date) return t('feed.justNow') || 'just now';
+    return formatTimeAgo(date, locale);
   };
 
   const dropdownItems = [
     ...(isOwner
       ? [
           {
-            label: 'Edit',
+            label: t('common.edit') || 'Edit',
             icon: <Edit2 className="w-4 h-4" />,
             onClick: () => setIsEditing(true),
           },
           {
-            label: 'Delete',
+            label: t('common.delete') || 'Delete',
             icon: <Trash2 className="w-4 h-4" />,
             onClick: handleDelete,
             danger: true,
@@ -98,7 +96,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       <div className="flex gap-3">
         {/* Avatar */}
         <Avatar
-          src={comment.userId?.avatar}
+          src={comment.userId?.avatar || (comment.userId as any)?.avatarUrl}
           alt={comment.userId?.username || 'User'}
           size="sm"
         />
@@ -169,7 +167,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                   className="flex items-center gap-1 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                 >
                   <Reply className="w-4 h-4" />
-                  <span>Reply</span>
+                  <span>{t('feed.reply') || 'Reply'}</span>
                 </button>
               )}
             </div>

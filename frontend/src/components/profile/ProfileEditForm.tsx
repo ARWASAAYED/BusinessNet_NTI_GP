@@ -7,6 +7,7 @@ import Input from '../common/Input';
 import Card from '../common/Card';
 import Avatar from '../common/Avatar';
 import userService, { User, UpdateProfileData } from '@/services/userService';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 interface ProfileEditFormProps {
   user: User;
@@ -15,6 +16,7 @@ interface ProfileEditFormProps {
 }
 
 export default function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEditFormProps) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<UpdateProfileData>({
     username: user.username,
     bio: user.bio || '',
@@ -51,7 +53,7 @@ export default function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEd
       const updatedUser = await userService.updateProfile(formData);
       if (onSuccess) onSuccess(updatedUser);
     } catch (err: any) {
-      setError(err.message || 'Failed to update profile');
+      setError(err.message || t('settings.profile.updateFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -76,12 +78,14 @@ export default function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEd
               </label>
             </div>
           </div>
-          <p className="text-sm font-medium text-gray-500 mt-4 dark:text-gray-400">Click to change profile picture</p>
+          <p className="text-sm font-medium text-gray-500 mt-4 dark:text-gray-400">
+            {t('settings.profile.clickToChange')}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <Input
-            label="Username"
+            label={t('settings.profile.username')}
             name="username"
             value={formData.username}
             onChange={handleChange}
@@ -90,7 +94,7 @@ export default function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEd
             className="input-focus-glow"
           />
           <Input
-            label="Location"
+            label={t('settings.profile.location')}
             name="location"
             value={formData.location}
             onChange={handleChange}
@@ -100,23 +104,25 @@ export default function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEd
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">Bio</label>
+          <label className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+            {t('settings.profile.bio')}
+          </label>
           <textarea
             name="bio"
             value={formData.bio}
             onChange={handleChange}
             rows={4}
             className="w-full px-4 py-3 border border-gray-200 dark:border-gray-800 rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none resize-none bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400"
-            placeholder="Tell us about yourself or your business..."
+            placeholder={t('settings.profile.bioPlaceholder')}
           />
         </div>
 
         <Input
-          label="Website"
+          label={t('settings.profile.website')}
           name="website"
           value={formData.website}
           onChange={handleChange}
-          placeholder="https://yourprofile.com"
+          placeholder={t('settings.profile.websitePlaceholder')}
           className="input-focus-glow"
         />
 
@@ -136,16 +142,16 @@ export default function ProfileEditForm({ user, onSuccess, onCancel }: ProfileEd
               className="hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               <X className="w-4 h-4 mr-2" />
-              Cancel
+              {t('settings.profile.cancel')}
             </Button>
           )}
           <Button 
             type="submit" 
             isLoading={isLoading}
-            className="gradient-bg-primary hover:shadow-lg hover:shadow-primary-500/25 transition-all"
+            className="gradient-bg-primary hover:shadow-lg hover:shadow-primary-500/25 transition-all font-bold"
           >
             <Save className="w-4 h-4 mr-2" />
-            Save Changes
+            {t('settings.profile.saveChanges')}
           </Button>
         </div>
       </form>

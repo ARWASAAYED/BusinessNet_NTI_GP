@@ -10,12 +10,13 @@ import PromotionForm from '@/components/promotion/PromotionForm';
 import postService, { Post } from '@/services/postService';
 import { useAuth } from '@/hooks/useAuth';
 import Spinner from '@/components/common/Spinner';
-
 import { useRouter } from 'next/navigation';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 export default function PromotionsPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [showTips, setShowTips] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
@@ -45,10 +46,45 @@ export default function PromotionsPage() {
   const handleSuccess = () => {
     setIsCreating(false);
     setSelectedPost(null);
-    // Force refresh the list by re-mounting logic is handled by PromotionList internal effect usually, 
-    // but here we might need a signal if we want instant update.
     window.location.reload(); 
   };
+
+  const isBusiness = user?.accountType === 'business' || Boolean(user?.businessId);
+
+  if (!isBusiness) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+        <div className="glass-card p-12 max-w-xl mx-auto space-y-6">
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200 dark:border-primary-800 flex items-center justify-center text-primary-600 dark:text-primary-400 shadow-md">
+            <Megaphone className="w-8 h-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">
+              {t('promotions.businessRequired')}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              {t('promotions.businessRequiredDesc')}
+            </p>
+          </div>
+          <div className="pt-4 flex flex-col sm:flex-row gap-3 justify-center">
+            <Button
+              onClick={() => router.push('/settings')}
+              className="font-bold rounded-xl"
+            >
+              {t('promotions.switchBusiness')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => router.push('/feed')}
+              className="rounded-xl font-bold"
+            >
+              {t('promotions.backToFeed')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -59,8 +95,8 @@ export default function PromotionsPage() {
             <Megaphone className="w-8 h-8" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Campaign Manager</h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium">Boost your visibility and reach target professionals</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('promotions.title')}</h1>
+            <p className="text-gray-500 dark:text-gray-400 font-medium">{t('promotions.subtitle')}</p>
           </div>
         </div>
         <Button 
@@ -68,7 +104,7 @@ export default function PromotionsPage() {
           className="h-14 px-8 rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-primary-500/20"
         >
           <Plus className="w-5 h-5" />
-          Create New Campaign
+          {t('promotions.create')}
         </Button>
       </div>
 
@@ -88,8 +124,8 @@ export default function PromotionsPage() {
                   <Card className="p-8">
                     <div className="flex items-center justify-between mb-8">
                       <div>
-                        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">Select a Post</h2>
-                        <p className="text-sm text-gray-500">Choose which content you want to promote today.</p>
+                        <h2 className="text-2xl font-black text-gray-900 dark:text-gray-100">{t('promotions.selectPost')}</h2>
+                        <p className="text-sm text-gray-500">{t('promotions.selectPostDesc')}</p>
                       </div>
                       <button 
                         onClick={() => setIsCreating(false)}
@@ -100,11 +136,12 @@ export default function PromotionsPage() {
                     </div>
 
                     <div className="relative mb-6">
-                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input 
                         type="text"
-                        placeholder="Filter your posts..."
-                        className="w-full pl-12 pr-4 py-4 bg-white dark:bg-gray-900 border-none rounded-2xl focus:ring-2 ring-primary-500 transition-all font-medium"
+                        placeholder={t('promotions.filterPosts')}
+                        dir="auto"
+                        className="w-full ps-12 pe-4 py-4 bg-white dark:bg-gray-900 border-none rounded-2xl focus:ring-2 ring-primary-500 transition-all font-medium"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
@@ -113,7 +150,7 @@ export default function PromotionsPage() {
                     {isLoadingPosts ? (
                       <div className="py-20 flex flex-col items-center gap-4">
                         <Spinner size="lg" />
-                        <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">Retrieving Timeline...</p>
+                        <p className="text-sm text-gray-500 font-bold uppercase tracking-widest">{t('promotions.retrieving')}</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
@@ -129,10 +166,10 @@ export default function PromotionsPage() {
                             <div className="flex items-center gap-4 text-[10px] text-gray-400 font-black uppercase tracking-widest">
                               <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                               <span>•</span>
-                              <span>{post.commentCount} Comments</span>
-                              {post.isPromoted && <span className="text-primary-500">Already Promoted</span>}
+                              <span>{post.commentCount} {t('promotions.comments')}</span>
+                              {post.isPromoted && <span className="text-primary-500">{t('promotions.alreadyPromoted')}</span>}
                             </div>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="absolute end-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Plus className="w-6 h-6 text-primary-500" />
                             </div>
                           </div>
@@ -143,14 +180,14 @@ export default function PromotionsPage() {
                               <Megaphone className="w-10 h-10 text-gray-400" />
                             </div>
                             <div className="max-w-xs mx-auto">
-                              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">No content to promote</h3>
-                              <p className="text-sm text-gray-500 mb-6">You need to share a professional update or an announcement before you can launch a campaign.</p>
+                              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{t('promotions.noContent')}</h3>
+                              <p className="text-sm text-gray-500 mb-6">{t('promotions.noContentDesc')}</p>
                               <Button 
                                 onClick={() => router.push('/feed')}
                                 className="w-full rounded-xl py-3 flex items-center justify-center gap-2"
                               >
                                 <Plus className="w-4 h-4" />
-                                Create Your First Post
+                                {t('promotions.firstPost')}
                               </Button>
                             </div>
                           </div>
@@ -165,7 +202,7 @@ export default function PromotionsPage() {
                         onClick={() => setSelectedPost(null)}
                         className="text-sm font-bold text-primary-600 hover:underline"
                       >
-                        ← Back to Selection
+                        {t('promotions.backSelection')}
                       </button>
                     </div>
                     <PromotionForm 
@@ -185,10 +222,10 @@ export default function PromotionsPage() {
                 className="space-y-6"
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Live Campaigns</h2>
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('promotions.liveCampaigns')}</h2>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <span className="w-2 h-2 bg-success-500 rounded-full animate-pulse" />
-                    Real-time tracking active
+                    {t('promotions.realtimeTracking')}
                   </div>
                 </div>
                 <PromotionList />
@@ -201,16 +238,16 @@ export default function PromotionsPage() {
         <div className="lg:col-span-4 space-y-6">
           {/* Quick Stats */}
           <Card className="p-6 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-4 opacity-10">
+            <div className="absolute top-0 end-0 p-4 opacity-10">
               <TrendingUp className="w-20 h-20" />
             </div>
             <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary-500" />
-              Network Impact
+              {t('promotions.networkImpact')}
             </h3>
             <div className="space-y-6 relative">
               <div>
-                <p className="text-sm text-gray-500 mb-1">Total Reach</p>
+                <p className="text-sm text-gray-500 mb-1">{t('promotions.totalReach')}</p>
                 <p className="text-3xl font-black text-gray-900 dark:text-gray-100">42,890</p>
                 <div className="w-full bg-gray-100 dark:bg-gray-800 h-1.5 rounded-full mt-2">
                   <div className="w-[70%] bg-primary-500 h-full rounded-full" />
@@ -218,11 +255,11 @@ export default function PromotionsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4 pt-2">
                 <div className="p-3 bg-white dark:bg-gray-900 rounded-xl">
-                  <p className="text-xs text-gray-500 mb-1">Conversions</p>
+                  <p className="text-xs text-gray-500 mb-1">{t('promotions.conversions')}</p>
                   <p className="font-bold text-lg text-success-500">+12%</p>
                 </div>
                 <div className="p-3 bg-white dark:bg-gray-900 rounded-xl">
-                  <p className="text-xs text-gray-500 mb-1">ROI</p>
+                  <p className="text-xs text-gray-500 mb-1">{t('promotions.roi')}</p>
                   <p className="font-bold text-lg text-primary-500">3.4x</p>
                 </div>
               </div>
@@ -235,7 +272,7 @@ export default function PromotionsPage() {
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-2 text-primary-700 dark:text-primary-300 font-bold">
                   <Target className="w-5 h-5" />
-                  Campaign Tips
+                  {t('promotions.tips')}
                 </div>
                 <button 
                   onClick={() => setShowTips(false)}
@@ -247,15 +284,15 @@ export default function PromotionsPage() {
               <ul className="space-y-4">
                 <li className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
                   <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 shrink-0" />
-                  Posts with high-quality images have a 40% higher engagement rate.
+                  {t('promotions.tip1')}
                 </li>
                 <li className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
                   <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 shrink-0" />
-                  Targeting specific industries like "Tech" increases conversion by 2x.
+                  {t('promotions.tip2')}
                 </li>
                 <li className="flex gap-3 text-sm text-gray-600 dark:text-gray-400">
                   <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mt-1.5 shrink-0" />
-                  Promote on Tuesdays and Thursdays for maximum professional reach.
+                  {t('promotions.tip3')}
                 </li>
               </ul>
             </Card>
@@ -264,12 +301,12 @@ export default function PromotionsPage() {
           {/* Help Card */}
           <div className="p-6 rounded-2xl bg-gradient-to-br from-primary-600 to-primary-800 text-white shadow-xl shadow-primary-500/20">
             <Info className="w-8 h-8 mb-4 opacity-50" />
-            <h3 className="text-lg font-bold mb-2">Need Help?</h3>
+            <h3 className="text-lg font-bold mb-2">{t('promotions.needHelp')}</h3>
             <p className="text-primary-100 text-sm mb-4 leading-relaxed">
-              Our advertising specialists can help you optimize your campaign for better results.
+              {t('promotions.needHelpDesc')}
             </p>
             <button className="w-full py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-primary-50 transition-colors">
-              Contact Support
+              {t('promotions.contactSupport')}
             </button>
           </div>
         </div>

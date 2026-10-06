@@ -66,11 +66,13 @@ exports.getCurrentUser = async (req, res, next) => {
 exports.searchUsers = async (req, res, next) => {
   try {
     const { q } = req.query;
-    const query = q
+    const cleanQ = q ? q.replace(/^#+/, '').trim() : '';
+    const query = cleanQ
       ? {
           $or: [
-            { fullName: { $regex: q, $options: "i" } },
-            { username: { $regex: q, $options: "i" } },
+            { fullName: { $regex: cleanQ, $options: "i" } },
+            { username: { $regex: cleanQ, $options: "i" } },
+            { bio: { $regex: cleanQ, $options: "i" } },
           ],
         }
       : {};
@@ -349,6 +351,7 @@ exports.followUser = async (req, res, next) => {
     res.json({
       success: true,
       message: "User followed successfully",
+      data: userToFollow,
     });
   } catch (error) {
     next(error);
@@ -377,6 +380,7 @@ exports.unfollowUser = async (req, res, next) => {
     res.json({
       success: true,
       message: "User unfollowed successfully",
+      data: userToUnfollow,
     });
   } catch (error) {
     next(error);
@@ -415,3 +419,56 @@ exports.getUserBadges = async (req, res, next) => {
     next(error);
   }
 };
+
+// Get list of users who follow this user
+exports.getFollowers = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID format" });
+    }
+
+    const user = await User.findById(id).populate(
+      "followers",
+      "_id username fullName avatarUrl bio accountType"
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      data: user.followers || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get list of users that this user follows
+exports.getFollowing = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid user ID format" });
+    }
+
+    const user = await User.findById(id).populate(
+      "following",
+      "_id username fullName avatarUrl bio accountType"
+    );
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      data: user.following || [],
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

@@ -7,7 +7,10 @@ import Button from '@/components/common/Button';
 import CommunityList from '@/components/community/CommunityList';
 import CommunityCreateModal from '@/components/community/CommunityCreateModal';
 
+import { useLanguage } from '@/components/layout/LanguageProvider';
+
 export default function CommunitiesPage() {
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,9 +33,9 @@ export default function CommunitiesPage() {
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">Communities</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('communities.title')}</h1>
             <p className="text-gray-500 dark:text-gray-400">
-              Discover and join communities around your interests
+              {t('communities.subtitle')}
             </p>
           </div>
           <Button 
@@ -41,7 +44,7 @@ export default function CommunitiesPage() {
             onClick={() => setIsModalOpen(true)}
           >
             <Plus className="w-5 h-5" />
-            Create Community
+            {t('communities.create')}
           </Button>
         </div>
 
@@ -57,13 +60,13 @@ export default function CommunitiesPage() {
         <div className="flex flex-col md:flex-row gap-4 mb-6">
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+              <Search className="absolute start-3.5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
               <Input
                 type="text"
-                placeholder="Search communities..."
+                placeholder={t('communities.search')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                className="ps-11 w-full rounded-2xl"
               />
             </div>
           </div>
@@ -82,7 +85,7 @@ export default function CommunitiesPage() {
                   : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-primary-500/50'
               }`}
             >
-              {category}
+              {t(`categories.${category}`, category)}
             </button>
           ))}
         </div>
@@ -93,6 +96,8 @@ export default function CommunitiesPage() {
         searchQuery={searchQuery}
         category={selectedCategory}
       />
+
+     
     </div>
   );
 }

@@ -23,6 +23,10 @@ const postSchema = new mongoose.Schema(
     hashtags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Hashtag" }],
     tag: { type: String },
 
+    // Repost functionality
+    originalPost: { type: mongoose.Schema.Types.ObjectId, ref: "Post" },
+    isRepost: { type: Boolean, default: false },
+
     // Engagement
     upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     downvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -33,6 +37,7 @@ const postSchema = new mongoose.Schema(
     // Impressions & shares
     impressions: { type: Number, default: 0 },
     uniqueViews: { type: Number, default: 0 },
+    viewerIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     externalClicks: { type: Number, default: 0 }, // link shares
 
     // AI and Content Scores

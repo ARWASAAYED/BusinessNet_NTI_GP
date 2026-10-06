@@ -8,12 +8,16 @@ import Button from '../common/Button';
 import notificationService, { Notification } from '@/services/notificationService';
 
 import { useNotifications } from '@/hooks/useNotifications';
+import { useLanguage } from '@/components/layout/LanguageProvider';
+
+import Link from 'next/link';
 
 interface NotificationListProps {
   onClose?: () => void;
 }
 
 const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
+  const { t } = useLanguage();
   const { 
     notifications, 
     unreadCount, 
@@ -32,48 +36,57 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
     await markAllAsRead();
   };
 
+  // Header dropdown only displays 1 notification as requested
+  const displayedNotifications = notifications.slice(0, 1);
+
   return (
-    <div className="w-full max-w-md bg-white dark:bg-gray-950 rounded-lg shadow-xl overflow-hidden border border-gray-200 dark:border-gray-800">
+    <div className="w-[calc(100vw-2rem)] sm:w-80 max-w-sm bg-white dark:bg-gray-950 rounded-2xl shadow-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
+      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/80 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('notifications.title')}</h2>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllAsRead}
-            >
-              Mark all as read
-            </Button>
+            <span className="text-[10px] font-black bg-primary-500 text-white px-1.5 py-0.5 rounded-full">
+              {unreadCount}
+            </span>
           )}
         </div>
+        {unreadCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleMarkAllAsRead}
+            className="text-xs px-2 py-1 h-auto"
+          >
+            {t('notifications.markAllRead')}
+          </Button>
+        )}
       </div>
 
       {/* Content */}
-      <div className="max-h-[500px] overflow-y-auto">
+      <div className="max-h-[300px] overflow-y-auto">
         {isLoading ? (
-          <div className="flex justify-center py-12">
+          <div className="flex justify-center py-8">
             <Spinner size="md" />
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-red-500 mb-4">{error}</p>
+          <div className="text-center py-8 px-4">
+            <p className="text-red-500 text-xs mb-3">{error}</p>
             <button
               onClick={loadNotifications}
-              className="text-primary-600 hover:text-primary-700 font-medium"
+              className="text-primary-600 hover:text-primary-700 text-xs font-semibold"
             >
-              Try again
+              {t('common.retry')}
             </button>
           </div>
-        ) : notifications.length === 0 ? (
-          <div className="text-center py-12 text-gray-500">
-            <p className="text-lg mb-2">No notifications</p>
-            <p className="text-sm">You're all caught up!</p>
+        ) : displayedNotifications.length === 0 ? (
+          <div className="text-center py-8 px-4 text-gray-500">
+            <p className="text-sm font-semibold mb-1">{t('notifications.noNotifications')}</p>
+            <p className="text-xs text-gray-400">{t('notifications.allCaughtUp')}</p>
           </div>
         ) : (
           <AnimatePresence>
-            {notifications.map((notification) => (
+            {displayedNotifications.map((notification) => (
               <NotificationItem
                 key={notification._id}
                 notification={notification}
@@ -83,6 +96,17 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
             ))}
           </AnimatePresence>
         )}
+      </div>
+
+      {/* Footer - Link to full notification page */}
+      <div className="p-2.5 border-t border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/50 text-center">
+        <Link
+          href="/notifications"
+          onClick={onClose}
+          className="text-xs font-bold text-primary-600 dark:text-primary-400 hover:underline block py-1"
+        >
+          {t('notifications.viewAll')} →
+        </Link>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import Spinner from "../common/Spinner";
 import Input from "../common/Input";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/app/providers";
+import { useLanguage } from "@/components/layout/LanguageProvider";
 
 interface MemberListProps {
   communityId: string;
@@ -19,6 +20,7 @@ interface MemberListProps {
 export default function MemberList({ communityId }: MemberListProps) {
   const { user } = useAuth();
   const { showToast } = useToast();
+  const { t } = useLanguage();
   const [members, setMembers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -80,12 +82,12 @@ export default function MemberList({ communityId }: MemberListProps) {
     <Card className="overflow-hidden">
       <div className="p-4 border-b border-gray-100 dark:border-gray-800">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
             placeholder="Search members..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-10 text-sm"
+            className="ps-10 h-10 text-sm"
           />
         </div>
       </div>
@@ -95,9 +97,9 @@ export default function MemberList({ communityId }: MemberListProps) {
           filteredMembers.map((member) => (
             <div
               key={member._id}
-              className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+              className="p-3 sm:p-4 flex items-center justify-between gap-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <Avatar src={member.avatar} alt={member.username} size="md" />
                 <div>
                   <div className="flex items-center gap-2">
@@ -116,7 +118,7 @@ export default function MemberList({ communityId }: MemberListProps) {
                     )}
                   </div>
                   <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                    Joined {new Date(member.joinedAt).getFullYear()}
+                    {t('profile.joined')} {new Date(member.joinedAt).getFullYear()}
                   </p>
                 </div>
               </div>

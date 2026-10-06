@@ -10,6 +10,7 @@ import Avatar from '../common/Avatar';
 import PostActions from './PostActions';
 import CommentList from '../comment/CommentList';
 import { formatTimeAgo } from '@/utils/dateHelpers';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 import Card from '../common/Card';
 import Button from '../common/Button';
 
@@ -20,6 +21,7 @@ interface PostDetailProps {
 export default function PostDetail({ post }: PostDetailProps) {
   const router = useRouter();
   const { user } = useAuth();
+  const { t, locale } = useLanguage();
   const userId = user?._id || user?.id || '';
 
   const [upvotes, setUpvotes] = useState(post.upvotes || []);
@@ -116,7 +118,7 @@ export default function PostDetail({ post }: PostDetailProps) {
                 {post.author?.username || 'Anonymous'}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {formatTimeAgo(post.createdAt)}
+                {formatTimeAgo(post.createdAt, locale)}
               </p>
             </div>
           </div>

@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import communityService, { Community } from "@/services/communityService";
 import postService, { Post } from "@/services/postService";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/components/layout/LanguageProvider";
 import Card from "../common/Card";
 import Avatar from "../common/Avatar";
 import Button from "../common/Button";
@@ -31,6 +32,7 @@ interface CommunityDetailProps {
 
 export default function CommunityDetail({ communityId }: CommunityDetailProps) {
   const { user } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [community, setCommunity] = useState<Community | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,8 +60,14 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
         // Mock filtering posts for this community (using hashtags or just some sample filter)
         setPosts(postsData.posts);
 
-        const currentUserId = user?._id;
-        if (currentUserId && commData.members.includes(currentUserId)) {
+        const currentUserId = user?._id || (user as any)?.id;
+        const isMember = Boolean(
+          currentUserId && (
+            (commData.members || []).some((m: any) => String(m?._id || m) === String(currentUserId)) ||
+            String(commData.createdBy?._id || (commData.createdBy as any)?.id) === String(currentUserId)
+          )
+        );
+        if (isMember) {
           setIsJoined(true);
         }
       } catch (error) {
@@ -77,9 +85,11 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
       if (isJoined) {
         await communityService.leaveCommunity(communityId);
         setIsJoined(false);
+        setCommunity((prev) => prev ? { ...prev, memberCount: Math.max(0, (prev.memberCount || 1) - 1) } : prev);
       } else {
         await communityService.joinCommunity(communityId);
         setIsJoined(true);
+        setCommunity((prev) => prev ? { ...prev, memberCount: (prev.memberCount || 0) + 1 } : prev);
       }
     } catch (error) {
       console.error("Join/Leave action failed:", error);
@@ -111,7 +121,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
   if (!community) {
     return (
       <Card className="p-10 text-center">
-        <p className="text-gray-500">Community not found</p>
+        <p className="text-gray-500">{t('communities.notFound')}</p>
       </Card>
     );
   }
@@ -134,27 +144,27 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
           <div className="absolute inset-0 bg-black/20" />
         </div>
 
-        <div className="px-8 pb-6">
-          <div className="relative flex flex-col md:flex-row justify-between items-start md:items-end -mt-12 mb-6 gap-4">
-            <div className="flex flex-col md:flex-row items-start md:items-end gap-6">
-              <div className="p-1 bg-white dark:bg-gray-900 rounded-2xl shadow-xl">
-                <div className="w-32 h-32 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-4xl border-4 border-white dark:border-gray-800">
+        <div className="px-4 sm:px-8 pb-6">
+          <div className="relative flex flex-col md:flex-row justify-between items-start md:items-end -mt-8 sm:-mt-12 mb-6 gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
+              <div className="p-1 bg-white dark:bg-gray-900 rounded-2xl shadow-xl shrink-0">
+                <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-xl bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center text-white font-bold text-2xl sm:text-3xl md:text-4xl border-4 border-white dark:border-gray-800">
                   {community.name.charAt(0)}
                 </div>
               </div>
 
               <div className="mb-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                     {community.name}
                   </h1>
                   {community.isPrivate ? (
-                    <Lock className="w-5 h-5 text-gray-400" />
+                    <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0" />
                   ) : (
-                    <Globe className="w-5 h-5 text-gray-400" />
+                    <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 shrink-0" />
                   )}
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                   <span className="flex items-center gap-1 font-medium bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg">
                     {community.category}
                   </span>
@@ -163,31 +173,31 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                     <span className="font-bold text-gray-900 dark:text-gray-100">
                       {community.memberCount}
                     </span>{" "}
-                    members
+                    {t('communities.members')}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex items-center gap-2 w-full md:w-auto">
               <Button
                 variant={isJoined ? "outline" : "primary"}
                 onClick={handleJoinLeave}
-                className="flex-1 md:flex-none rounded-xl h-11 px-8"
+                className="flex-1 md:flex-none rounded-xl h-10 sm:h-11 px-4 sm:px-8 text-sm font-bold"
               >
-                {isJoined ? "Joined" : "Join Community"}
+                {isJoined ? t('communities.joined') : t('communities.joinCommunity')}
               </Button>
               {isModerator && (
                 <Button
                   variant="ghost"
-                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-11"
+                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-10 sm:h-11"
                 >
                   <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </Button>
               )}
               <Button
                 variant="ghost"
-                className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-11"
+                className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-10 sm:h-11"
               >
                 <Share2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </Button>
@@ -196,22 +206,22 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
         </div>
 
         {/* Tabs */}
-        <div className="px-8 flex border-t border-gray-100 dark:border-gray-800">
+        <div className="px-4 sm:px-8 flex border-t border-gray-100 dark:border-gray-800 overflow-x-auto scrollbar-hide">
           {(["posts", "chat", "members", "about", "manage"] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-4 text-sm font-medium transition-all relative ${
+              className={`px-4 sm:px-6 py-3.5 sm:py-4 text-xs sm:text-sm font-bold transition-all relative whitespace-nowrap shrink-0 ${
                 activeTab === tab
                   ? "text-primary-600 dark:text-primary-400"
                   : "text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
               } ${tab === "chat" && !isJoined ? "hidden" : ""} ${tab === "manage" && !isModerator ? "hidden" : ""}`}
             >
-              <span className="capitalize">{tab}</span>
+              <span className="capitalize">{t(`communities.${tab}`)}</span>
               {activeTab === tab && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 dark:bg-primary-400"
+                  className="absolute bottom-0 start-0 end-0 h-0.5 bg-primary-600 dark:bg-primary-400"
                 />
               )}
             </button>
@@ -239,7 +249,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                   <Card className="p-12 text-center">
                     <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">
-                      No posts yet. Be the first to start a conversation!
+                      {t('communities.noPostsYet')}
                     </p>
                   </Card>
                 )}
@@ -276,10 +286,10 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                   <Card className="p-12 text-center">
                     <MessageSquare className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500 mb-4">
-                      Join the community to start chatting!
+                      {t('communities.joinToChat')}
                     </p>
                     <Button onClick={handleJoinLeave} variant="primary">
-                      Join Community
+                      {t('communities.joinCommunity')}
                     </Button>
                   </Card>
                 )}
@@ -296,7 +306,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                 <Card className="p-8 space-y-6">
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                      About this community
+                      {t('communities.aboutCommunity', 'About this community')}
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
                       {community.description}
@@ -306,7 +316,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                   <div className="grid grid-cols-2 gap-6 pt-4 border-t border-gray-100 dark:border-gray-800">
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">
-                        Created
+                        {t('communities.created', 'Created')}
                       </p>
                       <p className="text-gray-900 dark:text-gray-100">
                         {new Date(community.createdAt).toLocaleDateString()}
@@ -314,17 +324,17 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                     </div>
                     <div>
                       <p className="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">
-                        Privacy
+                        {t('communities.privacy', 'Privacy')}
                       </p>
                       <p className="text-gray-900 dark:text-gray-100">
-                        {community.isPrivate ? "Private" : "Public"}
+                        {community.isPrivate ? t('communities.private', 'Private') : t('communities.public', 'Public')}
                       </p>
                     </div>
                   </div>
 
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
-                      Moderators
+                      {t('communities.moderators', 'Moderators')}
                     </h3>
                     <div className="flex flex-wrap gap-4">
                       {/* In a real app we'd fetch actual moderator data */}
@@ -364,7 +374,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                     <div className="p-8 bg-gray-50 dark:bg-gray-900/50 rounded-3xl border border-gray-100 dark:border-gray-800">
                       <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-6 flex items-center gap-2">
                         <Settings className="w-5 h-5 text-primary-500" />
-                        General Settings
+                        {t('communities.generalSettings')}
                       </h4>
                       <form className="space-y-6" onSubmit={async (e) => {
                         e.preventDefault();
@@ -381,7 +391,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                         }
                       }}>
                         <div className="space-y-2">
-                          <label className="text-xs font-black uppercase tracking-widest text-gray-500">Community Name</label>
+                          <label className="text-xs font-black uppercase tracking-widest text-gray-500">{t('communities.communityName')}</label>
                           <input 
                             name="name"
                             defaultValue={community.name}
@@ -389,7 +399,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-xs font-black uppercase tracking-widest text-gray-500">Description</label>
+                          <label className="text-xs font-black uppercase tracking-widest text-gray-500">{t('communities.description')}</label>
                           <textarea 
                             name="description"
                             defaultValue={community.description}
@@ -398,7 +408,7 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                           />
                         </div>
                         <Button type="submit" variant="primary" className="rounded-2xl px-10 h-12 font-black uppercase tracking-widest text-[10px]">
-                          Save Changes
+                          {t('communities.saveChanges')}
                         </Button>
                       </form>
                     </div>
@@ -408,16 +418,16 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
                           <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-indigo-500 mb-4 shadow-sm group-hover:scale-110 transition-transform">
                              <Shield className="w-6 h-6" />
                           </div>
-                          <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-1">Moderation Logs</h4>
-                          <p className="text-xs text-gray-500">View recent administrative actions.</p>
+                          <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{t('communities.moderationLogs')}</h4>
+                          <p className="text-xs text-gray-500">{t('communities.moderationLogsDesc')}</p>
                        </div>
 
                        <div className="p-6 rounded-3xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 hover:border-red-500 transition-all cursor-pointer group">
                           <div className="w-12 h-12 bg-white dark:bg-gray-800 rounded-2xl flex items-center justify-center text-red-500 mb-4 shadow-sm group-hover:scale-110 transition-transform">
                              <Users className="w-6 h-6" />
                           </div>
-                          <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-1">Banned Users</h4>
-                          <p className="text-xs text-gray-500">Manage community blacklists and appeals.</p>
+                          <h4 className="font-bold text-gray-900 dark:text-gray-100 mb-1">{t('communities.bannedUsers')}</h4>
+                          <p className="text-xs text-gray-500">{t('communities.bannedUsersDesc')}</p>
                        </div>
                     </div>
                  </Card>
@@ -430,37 +440,31 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
         <div className="space-y-6">
           <Card className="p-6">
             <h3 className="font-bold text-gray-900 dark:text-gray-100 mb-4">
-              Rules
+              {t('communities.rules')}
             </h3>
             <ul className="space-y-3">
-              {[
-                "Be professional and respectful",
-                "No spam or self-promotion without context",
-                "Share valuable insights",
-                "Engage with others constructively",
-              ].map((rule, i) => (
+              {[1, 2, 3, 4].map((i) => (
                 <li
                   key={i}
                   className="flex gap-3 text-sm text-gray-600 dark:text-gray-400"
                 >
-                  <span className="font-bold text-primary-500">{i + 1}.</span>
-                  {rule}
+                  <span className="font-bold text-primary-500">{i}.</span>
+                  {t(`communities.rule${i}`)}
                 </li>
               ))}
             </ul>
           </Card>
 
           <Card className="p-6 bg-gradient-to-br from-primary-600 to-indigo-700 text-white border-none">
-            <h3 className="font-bold text-lg mb-2">Grow your network</h3>
+            <h3 className="font-bold text-lg mb-2">{t('communities.growNetwork')}</h3>
             <p className="text-blue-100 text-sm mb-4">
-              Invite your colleagues to join {community.name} and share
-              knowledge together.
+              {t('communities.growNetworkDesc')}
             </p>
             <Button
               variant="secondary"
               className="w-full bg-white text-primary-600 hover:bg-gray-100"
             >
-              Invite Members
+              {t('communities.inviteMembers')}
             </Button>
           </Card>
         </div>

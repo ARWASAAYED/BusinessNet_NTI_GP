@@ -13,9 +13,12 @@ import businessService, { Business } from '@/services/businessService';
 
 import communityService, { Community } from '@/services/communityService';
 
+import { useLanguage } from '@/components/layout/LanguageProvider';
+
 function SearchContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useLanguage();
   const query = searchParams.get('q') || '';
   const [activeTab, setActiveTab] = useState<'posts' | 'users' | 'businesses' | 'communities'>('posts');
   const [results, setResults] = useState<{ posts: Post[], users: User[], businesses: Business[], communities: Community[] }>({
@@ -34,18 +37,24 @@ function SearchContent() {
       }
       setIsLoading(true);
       try {
-        const [postsData, usersData, businessesData, communitiesData] = await Promise.all([
+        const cleanQuery = query.replace(/^#+/, '').trim();
+        const [postsRes, usersRes, businessesRes, communitiesRes] = await Promise.allSettled([
           postService.searchPosts(query),
-          userService.searchUsers(query),
-          businessService.searchBusinesses(query),
-          communityService.searchCommunities(query)
+          userService.searchUsers(cleanQuery || query),
+          businessService.searchBusinesses(cleanQuery || query),
+          communityService.searchCommunities(cleanQuery || query)
         ]);
         
+        const postsData = postsRes.status === 'fulfilled' ? postsRes.value : { posts: [] };
+        const usersData = usersRes.status === 'fulfilled' ? usersRes.value : [];
+        const businessesData = businessesRes.status === 'fulfilled' ? businessesRes.value : [];
+        const communitiesData = communitiesRes.status === 'fulfilled' ? communitiesRes.value : [];
+
         setResults({
-          posts: postsData.posts || [],
-          users: usersData || [],
-          businesses: businessesData || [],
-          communities: communitiesData || []
+          posts: Array.isArray(postsData) ? postsData : (postsData?.posts || []),
+          users: Array.isArray(usersData) ? usersData : [],
+          businesses: Array.isArray(businessesData) ? businessesData : [],
+          communities: Array.isArray(communitiesData) ? communitiesData : []
         });
       } catch (error) {
         console.error('Search failed:', error);
@@ -61,16 +70,16 @@ function SearchContent() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
           <Search className="w-6 h-6 text-primary-600" />
-          {query ? `Search results for "${query}"` : 'Enter a search term'}
+          {query ? `${t('search.resultsFor') || 'Search results for'} "${query}"` : (t('search.enterTerm') || 'Enter a search term')}
         </h1>
       </div>
 
       <div className="flex border-b border-gray-200 dark:border-gray-800 mb-6 sticky top-16 bg-white dark:bg-gray-950 z-10 py-2">
         {[
-          { id: 'posts', label: 'Posts', icon: MessageSquare, count: results.posts.length },
-          { id: 'users', label: 'People', icon: Users, count: results.users.length },
-          { id: 'businesses', label: 'Businesses', icon: Building2, count: results.businesses.length },
-          { id: 'communities', label: 'Communities', icon: Users, count: results.communities.length },
+          { id: 'posts', label: t('search.posts') || 'Posts', icon: MessageSquare, count: results.posts.length },
+          { id: 'users', label: t('search.people') || 'People', icon: Users, count: results.users.length },
+          { id: 'businesses', label: t('search.businesses') || 'Businesses', icon: Building2, count: results.businesses.length },
+          { id: 'communities', label: t('search.communities') || 'Communities', icon: Users, count: results.communities.length },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -98,7 +107,7 @@ function SearchContent() {
             results.posts.length > 0 ? (
               results.posts.map(post => <PostCard key={post._id} post={post} />)
             ) : (
-              <p className="text-center py-10 text-gray-500">No posts found</p>
+              <p className="text-center py-10 text-gray-500">{t('search.noPosts') || 'No posts found'}</p>
             )
           )}
 
@@ -116,7 +125,7 @@ function SearchContent() {
                 ))}
               </div>
             ) : (
-              <p className="text-center py-10 text-gray-500">No people found</p>
+              <p className="text-center py-10 text-gray-500">{t('search.noPeople') || 'No people found'}</p>
             )
           )}
 
@@ -134,7 +143,7 @@ function SearchContent() {
                 ))}
               </div>
             ) : (
-              <p className="text-center py-10 text-gray-500">No businesses found</p>
+              <p className="text-center py-10 text-gray-500">{t('search.noBusinesses') || 'No businesses found'}</p>
             )
           )}
 
@@ -154,7 +163,7 @@ function SearchContent() {
                 ))}
               </div>
             ) : (
-              <p className="text-center py-10 text-gray-500">No communities found</p>
+              <p className="text-center py-10 text-gray-500">{t('search.noCommunities') || 'No communities found'}</p>
             )
           )}
         </div>

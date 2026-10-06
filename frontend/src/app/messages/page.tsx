@@ -10,10 +10,12 @@ import { useMessages } from '@/hooks/useMessages';
 import { useRouter } from 'next/navigation';
 import NewChatModal from '@/components/messaging/NewChatModal';
 import { AnimatePresence } from 'framer-motion';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 export default function MessagesPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
@@ -55,7 +57,7 @@ export default function MessagesPage() {
 
   if (authLoading) {
     return (
-      <div className="h-[80vh] flex items-center justify-center">
+      <div className="h-full flex-1 flex items-center justify-center bg-white dark:bg-gray-950">
         <Spinner size="lg" />
       </div>
     );
@@ -63,33 +65,36 @@ export default function MessagesPage() {
 
   if (!isAuthenticated) return null;
 
+  const currentRecipient = selectedConversation ? getRecipient(selectedConversation) : null;
+
   return (
-    <div className="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
+    <div className="flex-1 flex overflow-hidden h-full min-h-0 bg-white dark:bg-gray-950">
       {/* Conversations Sidebar */}
       <aside
-        className={`w-full lg:w-96 border-r border-gray-200 dark:border-gray-800 flex flex-col transition-all ${
+        className={`w-full lg:w-96 border-e border-gray-200/80 dark:border-gray-800/80 flex flex-col shrink-0 transition-all bg-white dark:bg-gray-950 ${
           selectedConversationId ? 'hidden lg:flex' : 'flex'
         }`}
       >
-        <div className="p-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="p-4 border-b border-gray-200/80 dark:border-gray-800/80">
           <div className="flex items-center justify-between mb-4">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
+            <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('messages.title')}</h1>
             <button 
               onClick={() => setIsNewChatModalOpen(true)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+              title={t('messages.newConversation')}
             >
-              <Edit className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Edit className="w-5 h-5" />
             </button>
           </div>
 
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
             <Input
               type="text"
-              placeholder="Search conversations..."
+              placeholder={t('messages.searchConversations')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+              className="ps-9 bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-800 text-sm"
             />
           </div>
         </div>
@@ -110,25 +115,26 @@ export default function MessagesPage() {
       </aside>
 
       {/* Chat Window */}
-      <main className={`flex-1 flex flex-col ${!selectedConversationId ? 'hidden lg:flex' : 'flex'}`}>
-        {selectedConversation ? (
+      <main className={`flex-1 flex flex-col min-w-0 min-h-0 ${!selectedConversationId ? 'hidden lg:flex' : 'flex'}`}>
+        {selectedConversation && currentRecipient ? (
           <ChatWindow
             conversationId={selectedConversation._id}
-            recipientId={getRecipient(selectedConversation)._id}
-            recipientName={getRecipient(selectedConversation).username}
-            recipientAvatar={getRecipient(selectedConversation).avatar}
-            isOnline={getRecipient(selectedConversation).isOnline}
+            recipientId={currentRecipient._id}
+            recipientName={currentRecipient.username || 'User'}
+            recipientAvatar={currentRecipient.avatar}
+            recipientAccountType={currentRecipient.accountType}
+            isOnline={currentRecipient.isOnline}
             onBack={() => setSelectedConversationId(null)}
           />
         ) : (
-          <div className="flex items-center justify-center h-full bg-white dark:bg-gray-950 text-center p-6">
+          <div className="flex items-center justify-center h-full bg-slate-50/50 dark:bg-gray-950 text-center p-6">
             <div className="max-w-sm">
-              <div className="bg-gray-100 dark:bg-gray-900 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 rounded-3xl bg-primary-50 dark:bg-primary-950/60 border border-primary-200/50 dark:border-primary-800/50 text-primary-500 flex items-center justify-center mx-auto mb-4 shadow-sm">
+                <Search className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Select a conversation</h2>
-              <p className="text-gray-500 dark:text-gray-400">
-                Choose a conversation from the list or start a new one to begin messaging.
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('messages.selectConversation')}</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('messages.selectConversationDesc')}
               </p>
             </div>
           </div>

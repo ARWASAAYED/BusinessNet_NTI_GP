@@ -54,7 +54,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const showToast = useCallback((message: string, type: ToastType = 'info', duration = 5000) => {
     const id = `toast-${Date.now()}-${Math.random()}`;
     const newToast: Toast = { id, message, type, duration };
-    setToasts((prev) => [...prev, newToast]);
+    setToasts([newToast]);
   }, []);
 
   const removeToast = useCallback((id: string) => {

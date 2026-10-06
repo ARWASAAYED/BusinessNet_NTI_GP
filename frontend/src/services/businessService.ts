@@ -7,6 +7,7 @@ export interface Business {
   description: string;
   category: string;
   logo?: string;
+  avatarUrl?: string;
   coverImage?: string;
   website?: string;
   email?: string;
@@ -25,6 +26,8 @@ export interface Business {
     instagram?: string;
   };
   verified: boolean;
+  isVerified?: boolean;
+  industry?: string;
   reputationScore: number;
   metrics: {
     trustScore: number;
