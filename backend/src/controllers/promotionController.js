@@ -159,15 +159,17 @@ exports.getPromotionAnalytics = async (req, res) => {
       return res.status(404).json({ success: false, message: "Promotion not found" });
     }
 
-    // Generate mock analytics data based on history for demonstration
+    const impressions = promotion.analytics?.impressions || 0;
+    const clicks = promotion.analytics?.clicks || 0;
+    const spent = promotion.spent || 0;
     const analytics = {
-      impressions: promotion.analytics.impressions || Math.floor(promotion.spent * 150),
-      clicks: promotion.analytics.clicks || Math.floor(promotion.spent * 12),
-      ctr: ((promotion.analytics.clicks || 1) / (promotion.analytics.impressions || 1) * 100).toFixed(2),
-      conversions: promotion.analytics.conversions || Math.floor(promotion.spent * 2),
-      spent: promotion.spent,
-      remaining: promotion.budget - promotion.spent,
-      roi: (Math.random() * 2 + 2).toFixed(1) // Random ROI between 2x and 4x
+      impressions,
+      clicks,
+      ctr: impressions > 0 ? Number(((clicks / impressions) * 100).toFixed(2)) : 0,
+      conversions: promotion.analytics?.conversions || 0,
+      budget: promotion.budget,
+      spent,
+      remaining: Math.max(0, promotion.budget - spent)
     };
 
     res.status(200).json({ success: true, data: analytics });

@@ -40,7 +40,7 @@ export interface Business {
     reason: string;
     date: string;
   }[];
-  followers: string[];
+  followers: Array<string | { _id: string }>;
   hashtags?: { name: string }[];
   offerings?: {
     _id: string;
@@ -99,6 +99,11 @@ const businessService = {
   // Get businesses by user
   getUserBusinesses: async (userId: string): Promise<Business[]> => {
     const response = await api.get(`/businesses/user/${userId}`);
+    return response.data.data;
+  },
+
+  getFollowedBusinesses: async (): Promise<Business[]> => {
+    const response = await api.get("/businesses/followed");
     return response.data.data;
   },
 

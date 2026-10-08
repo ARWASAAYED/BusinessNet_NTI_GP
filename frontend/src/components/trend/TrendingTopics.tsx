@@ -7,8 +7,10 @@ import trendService, { TrendingTopic } from '@/services/trendService';
 import Card from '../common/Card';
 import Spinner from '../common/Spinner';
 import Badge from '../common/Badge';
+import { useLanguage } from '@/components/layout/LanguageProvider';
 
 export default function TrendingTopics() {
+  const { t } = useLanguage();
   const [trends, setTrends] = useState<TrendingTopic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -37,13 +39,13 @@ export default function TrendingTopics() {
           <div className="p-2.5 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl text-white shadow-lg shadow-primary-500/40">
             <Zap className="w-5 h-5 fill-current" />
           </div>
-          <h2 className="font-black text-gray-900 dark:text-gray-100 tracking-tight">Trending Now</h2>
+          <h2 className="font-black text-gray-900 dark:text-gray-100 tracking-tight">{t("trending.title", "Trending Now")}</h2>
         </div>
         <button 
           onClick={() => window.location.href = '/trending'}
           className="text-xs font-black uppercase tracking-widest text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
         >
-          View All
+          {t("trending.viewAll", "View All")}
         </button>
       </div>
 
@@ -59,7 +61,7 @@ export default function TrendingTopics() {
                 : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
             }`}
           >
-            {cat}
+            {t(`categories.${cat}`, cat)}
           </button>
         ))}
       </div>

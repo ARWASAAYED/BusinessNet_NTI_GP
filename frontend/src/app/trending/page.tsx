@@ -13,7 +13,7 @@ import TrendChart, { TrendDataPoint } from '@/components/trend/TrendChart';
 import { useLanguage } from '@/components/layout/LanguageProvider';
 
 export default function TrendingPage() {
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const [posts, setPosts] = useState<Post[]>([]);
   const [topics, setTopics] = useState<TrendingTopic[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,24 +29,37 @@ export default function TrendingPage() {
   ];
 
   useEffect(() => {
-    // Generate some mock chart data
-    const mockData: TrendDataPoint[] = Array.from({ length: 14 }, (_, i) => ({
-      timestamp: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000).toISOString(),
-      value: Math.floor(Math.random() * 500) + 200 + (i * 20)
-    }));
-    setChartData(mockData);
-
     const loadTrendingContent = async () => {
       setIsLoading(true);
+      setChartData([]);
       try {
         const [postsData, topicsData] = await Promise.all([
           trendService.getTrendingPosts(1, 10, selectedCategory),
           trendService.getTrendingTopics(selectedCategory)
         ]);
+        const loadedTopics = topicsData || [];
         setPosts(postsData.posts || []);
-        setTopics(topicsData || []);
+        setTopics(loadedTopics);
+
+        const activityByDate = new Map<string, number>();
+        loadedTopics.forEach((topic) => {
+          topic.history?.forEach((point) => {
+            const date = new Date(point.date);
+            if (Number.isNaN(date.getTime()) || !Number.isFinite(point.score)) {
+              return;
+            }
+            const key = date.toISOString();
+            activityByDate.set(key, (activityByDate.get(key) || 0) + point.score);
+          });
+        });
+        setChartData(
+          Array.from(activityByDate, ([timestamp, value]) => ({ timestamp, value }))
+            .sort((a, b) => a.timestamp.localeCompare(b.timestamp)),
+        );
       } catch (error) {
         console.error('Failed to load trending content:', error);
+        setPosts([]);
+        setTopics([]);
       } finally {
         setIsLoading(false);
       }

@@ -13,7 +13,6 @@ import {
   Megaphone, 
   Swords, 
   Newspaper, 
-  BarChart3,
   Menu,
   X,
   Settings,
@@ -41,11 +40,7 @@ const MobileNav = () => {
   const primaryNav = [
     { href: '/feed', label: t('nav.feed'), icon: Home },
     { href: '/communities', label: t('nav.communities'), icon: Users },
-    { 
-      href: isBusinessUser ? '/business/dashboard' : '/business', 
-      label: isBusinessUser ? t('nav.dashboard') : t('nav.business'), 
-      icon: isBusinessUser ? BarChart3 : Building2 
-    },
+    { href: "/business", label: t("nav.business"), icon: Building2 },
     { href: '/messages', label: t('nav.messages'), icon: MessageSquare, badge: 0 },
   ];
 
@@ -53,7 +48,6 @@ const MobileNav = () => {
   const moreItems = [
     { href: '/network', label: t('nav.network') || 'Network', desc: isRTL ? 'متابعون ومتابَعون واقتراحات' : 'Followers, following & suggestions', icon: UserCheck, color: 'text-teal-500 bg-teal-50 dark:bg-teal-950/40' },
     { href: '/business', label: t('nav.business'), desc: t('business.browseBusinesses') || 'Explore companies & services', icon: Building2, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40' },
-    { href: '/business/dashboard', label: t('nav.dashboard'), desc: t('dashboard.title') || 'Analytics, leads & growth', icon: BarChart3, color: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40' },
     { href: '/promotions', label: t('nav.promotions'), desc: t('promotions.title') || 'Campaigns, boosts & ads', icon: Megaphone, color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40' },
     { href: '/battles', label: t('nav.battles'), desc: t('battles.title') || 'Head-to-head challenges', icon: Swords, color: 'text-red-500 bg-red-50 dark:bg-red-950/40' },
     { href: '/trending', label: t('nav.trending'), desc: t('nav.trending') || 'Viral topics & ideas', icon: TrendingUp, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40' },
@@ -133,15 +127,7 @@ const MobileNav = () => {
                     <p className="text-[10px] font-black uppercase tracking-wider text-primary-700 dark:text-primary-300 mb-2">
                       {isRTL ? 'أدوات الأعمال السريعة' : 'Quick Business Tools'}
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Link
-                        href="/business/dashboard"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="flex items-center gap-2 p-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm"
-                      >
-                        <BarChart3 className="w-4 h-4 text-primary-600" />
-                        <span className="text-xs font-bold text-gray-800 dark:text-gray-200 truncate">{t('nav.dashboard')}</span>
-                      </Link>
+                    <div className="grid grid-cols-1 gap-2">
                       <Link
                         href="/promotions"
                         onClick={() => setIsMenuOpen(false)}

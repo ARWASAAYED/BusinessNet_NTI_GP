@@ -1,13 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
   Users, 
   Eye, 
-  ArrowUpRight, 
-  ArrowDownRight, 
   Target, 
   Megaphone,
   ChevronRight,
@@ -30,38 +28,45 @@ export default function BusinessDashboard() {
   const [analytics, setAnalytics] = useState<any>(null);
   const [performance, setPerformance] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [loadError, setLoadError] = useState(false);
   const [filterMetric, setFilterMetric] = useState<'views' | 'upvotes' | 'recent' | 'trending'>('views');
   const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const businessId = user?.businessId;
 
-  useEffect(() => {
-    if (businessId) {
-      const fetchData = async () => {
-        setIsLoading(true);
-        try {
-          const [stats, posts] = await Promise.all([
-            businessService.getAnalytics(businessId),
-            businessService.getPostPerformance(businessId)
-          ]);
-          setAnalytics(stats);
-          setPerformance(posts);
-        } catch (error) {
-          console.error('Failed to fetch dashboard data:', error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchData();
+  const fetchData = useCallback(async () => {
+    if (!businessId) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setLoadError(false);
+    try {
+      const [stats, posts] = await Promise.all([
+        businessService.getAnalytics(businessId),
+        businessService.getPostPerformance(businessId)
+      ]);
+      setAnalytics(stats);
+      setPerformance(posts);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      setLoadError(true);
+    } finally {
+      setIsLoading(false);
     }
   }, [businessId]);
+
+  useEffect(() => {
+    void fetchData();
+  }, [fetchData]);
 
   const sortedPerformance = useMemo(() => {
     const list = [...performance];
     if (filterMetric === 'views') {
       return list.sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
     }
+
     if (filterMetric === 'upvotes') {
       return list.sort((a, b) => (b.upvotesCount || 0) - (a.upvotesCount || 0));
     }
@@ -95,7 +100,30 @@ export default function BusinessDashboard() {
     );
   }
 
-  const StatCard = ({ title, value, subtext, icon, trend, trendValue }: any) => (
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="max-w-md p-8 text-center space-y-4">
+          <p className="text-gray-600 dark:text-gray-300">{t('dashboard.loadFailed')}</p>
+          <Button onClick={() => void fetchData()} className="w-full rounded-2xl py-3">
+            {t('common.retry')}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const StatCard = ({
+    title,
+    value,
+    subtext,
+    icon,
+  }: {
+    title: string;
+    value: string | number;
+    subtext: string;
+    icon: React.ReactNode;
+  }) => (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -115,14 +143,6 @@ export default function BusinessDashboard() {
           <h3 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{value}</h3>
           <p className="text-xs text-gray-500 font-bold mt-2 uppercase tracking-tight">{subtext}</p>
         </div>
-        {trend && (
-          <div className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-black ${
-            trend === 'up' ? 'bg-success-100 text-success-700' : 'bg-red-100 text-red-700'
-          }`}>
-            {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-            {trendValue}%
-          </div>
-        )}
       </div>
     </motion.div>
   );
@@ -172,6 +192,10 @@ export default function BusinessDashboard() {
     document.body.removeChild(link);
   };
 
+  const campaignCtr = analytics?.totalPromoImpressions > 0
+    ? (analytics.totalClicks / analytics.totalPromoImpressions) * 100
+    : 0;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Header */}
@@ -212,40 +236,30 @@ export default function BusinessDashboard() {
           value={analytics?.totalImpressions?.toLocaleString() || 0}
           subtext={t('dashboard.impressionsSub')}
           icon={<Eye className="w-6 h-6" />}
-          trend="up"
-          trendValue={12.5}
         />
         <StatCard 
           title={t('dashboard.uniqueReach')} 
           value={analytics?.totalUniqueViews?.toLocaleString() || 0}
           subtext={t('dashboard.uniqueReachSub')}
           icon={<Users className="w-6 h-6" />}
-          trend="up"
-          trendValue={9.2}
         />
          <StatCard 
           title={t('dashboard.engagement')} 
           value={analytics?.totalUpvotes || 0}
           subtext={t('dashboard.engagementSub')}
           icon={<TrendingUp className="w-6 h-6" />}
-          trend="up"
-          trendValue={8.2}
         />
          <StatCard 
           title={t('dashboard.networkReach')} 
           value={analytics?.followersCount || 0}
           subtext={t('dashboard.networkReachSub')}
           icon={<Users className="w-6 h-6" />}
-          trend="up"
-          trendValue={4.1}
         />
          <StatCard 
           title={t('dashboard.marketTrust')} 
           value={`${analytics?.reputationScore || 0}%`}
           subtext={t('dashboard.marketTrustSub')}
           icon={<Target className="w-6 h-6" />}
-          trend="up"
-          trendValue={0.5}
         />
       </div>
 
@@ -390,10 +404,15 @@ export default function BusinessDashboard() {
               <div className="pt-4 border-t border-white/10">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-black uppercase tracking-widest text-indigo-100">{t('dashboard.ctr')}</span>
-                  <span className="text-xs font-black uppercase tracking-widest text-indigo-100">8.4%</span>
+                  <span className="text-xs font-black uppercase tracking-widest text-indigo-100">
+                    {campaignCtr.toFixed(2)}%
+                  </span>
                 </div>
                 <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                  <div className="w-[84%] bg-white h-full" />
+                  <div
+                    className="bg-white h-full"
+                    style={{ width: `${Math.min(100, Math.max(0, campaignCtr))}%` }}
+                  />
                 </div>
               </div>
 
@@ -418,46 +437,6 @@ export default function BusinessDashboard() {
             </div>
           </div>
 
-          {/* AI Intelligence Tips */}
-          <div className="p-8 bg-gray-900 rounded-[2.5rem] text-white overflow-hidden relative">
-             <div className="absolute top-0 right-0 p-4 opacity-20">
-               <TrendingUp className="w-12 h-12 text-primary-500" />
-             </div>
-             <h3 className="text-lg font-black mb-6 flex items-center gap-3">
-               💡 {t('dashboard.networkIntel')}
-             </h3>
-             <div className="space-y-6">
-                <div className="flex gap-4 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer group">
-                  <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">
-                    🔥
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">{t('dashboard.tipReach')}</p>
-                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-black">{t('dashboard.aiPrediction')}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer group">
-                  <div className="w-10 h-10 bg-success-500 rounded-xl flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">
-                    📈
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">{t('dashboard.tipTech')}</p>
-                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-black">{t('dashboard.globalTrend')}</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 p-4 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors cursor-pointer group">
-                  <div className="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-white shrink-0 group-hover:scale-110 transition-transform">
-                    ✨
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold">{t('dashboard.tipProfile')}</p>
-                    <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-black">{t('dashboard.smartTip')}</p>
-                  </div>
-                </div>
-             </div>
-          </div>
         </div>
       </div>
     </div>

@@ -20,9 +20,9 @@ export interface PromotionAnalytics {
   clicks: number;
   ctr: number;
   conversions: number;
+  budget: number;
   spent: number;
   remaining: number;
-  roi: number;
 }
 
 const promotionService = {

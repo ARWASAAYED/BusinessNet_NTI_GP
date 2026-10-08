@@ -27,7 +27,7 @@ export default function BusinessPage() {
   return (
     <div className="min-h-screen pb-20">
       {/* Premium Hero Section */}
-      <div className="relative h-[400px] mb-12 overflow-hidden flex items-center justify-center">
+      <div className="relative min-h-[400px] h-auto py-12 sm:h-[400px] sm:py-0 mb-12 overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-indigo-600 to-purple-800 animate-gradient-xy" />
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
         
@@ -38,10 +38,18 @@ export default function BusinessPage() {
             transition={{ duration: 0.8 }}
           >
             <h1 className="text-4xl md:text-6xl font-black text-white mb-6 uppercase tracking-tight leading-tight">
-              {t('business.heroTitle')}
+              {t(
+                "business.heroTitle",
+                isRTL ? "?????? ?????? ???????" : "Explore the Business Ecosystem",
+              )}
             </h1>
             <p className="text-base md:text-xl text-white/80 mb-10 font-medium max-w-2xl mx-auto leading-relaxed">
-              {t('business.heroSubtitle')}
+              {t(
+                "business.heroSubtitle",
+                isRTL
+                  ? "????? ?? ???????? ?????? ??????? ????? ??????? ?? ??????."
+                  : "Connect with ventures, service providers, and industry leaders in our network.",
+              )}
             </p>
           </motion.div>
 

@@ -116,14 +116,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={() => handleCall('voice')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+            className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
             title="Start voice call"
           >
             <Phone className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
           <button
             onClick={() => handleCall('video')}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+            className="hidden sm:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
             title="Start video call"
           >
             <Video className="w-4 h-4 sm:w-5 sm:h-5" />

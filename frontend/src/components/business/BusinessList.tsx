@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import BusinessCard from './BusinessCard';
 import Spinner from '../common/Spinner';
@@ -20,12 +20,9 @@ const BusinessList: React.FC<BusinessListProps> = ({ category, userId, searchQue
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const currentUserId = user?.id || user?._id;
 
-  useEffect(() => {
-    loadBusinesses();
-  }, [category, userId, searchQuery]);
-
-  const loadBusinesses = async () => {
+  const loadBusinesses = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -47,23 +44,30 @@ const BusinessList: React.FC<BusinessListProps> = ({ category, userId, searchQue
 
       setBusinesses(data);
 
-      // Initialize following state
-      if (user) {
-        const userId = user.id || user._id;
-        const following = new Set<string>();
-        data.forEach(business => {
-          if (userId && business.followers.includes(userId)) {
+      const following = new Set<string>();
+      if (currentUserId) {
+        data.forEach((business) => {
+          if (
+            business.followers?.some((follower) =>
+              (typeof follower === "string" ? follower : follower._id) ===
+              currentUserId,
+            )
+          ) {
             following.add(business._id);
           }
         });
-        setFollowingIds(following);
       }
+      setFollowingIds(following);
     } catch (err: any) {
       setError(err.message || 'Failed to load businesses');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [category, currentUserId, searchQuery, userId]);
+
+  useEffect(() => {
+    void loadBusinesses();
+  }, [loadBusinesses]);
 
   const handleFollow = async (businessId: string) => {
     if (!user) return;
@@ -85,6 +89,7 @@ const BusinessList: React.FC<BusinessListProps> = ({ category, userId, searchQue
       } else {
         await businessService.followBusiness(businessId);
       }
+      window.dispatchEvent(new Event("business:updated"));
     } catch (err: any) {
       // Revert on error
       setFollowingIds(followingIds);

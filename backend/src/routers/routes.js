@@ -104,6 +104,7 @@ router.get(
   businessController.getUserBusinesses
 );
 router.get("/businesses", optionalAuth, businessController.getAllBusinesses);
+router.get("/businesses/followed", auth, businessController.getFollowedBusinesses);
 router.get("/businesses/:id", optionalAuth, businessController.getBusinessProfile);
 // Update business profile with proper middleware for fields
 router.put(

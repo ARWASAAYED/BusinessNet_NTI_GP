@@ -33,7 +33,7 @@ exports.searchBusinesses = async (req, res) => {
     }
 
     if (category && category !== "All") {
-      query.industry = category;
+      query.$and = [{ $or: [{ industry: category }, { category }] }];
     }
 
     const businesses = await Business.find(query).limit(20);
@@ -50,7 +50,9 @@ exports.getBusinessesByCategory = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const query = category && category !== "All" ? { industry: category } : {};
+    const query = category && category !== "All"
+      ? { $or: [{ industry: category }, { category }] }
+      : {};
     const businesses = await Business.find(query)
       .sort({ reputationScore: -1 })
       .skip(skip)
@@ -78,26 +80,29 @@ exports.getUserBusinesses = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+exports.getFollowedBusinesses = async (req, res) => {
+  try {
+    const businesses = await Business.find({ followers: req.user._id })
+      .select("_id name logo avatarUrl category industry followers")
+      .sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: businesses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };
+
+};
+
 
 exports.followBusiness = async (req, res) => {
   try {
-    const business = await Business.findById(req.params.id);
+    const business = await Business.findByIdAndUpdate(
+      req.params.id,
+      { $addToSet: { followers: req.user._id } },
+      { new: true },
+    );
     if (!business)
       return res.status(404).json({ message: "Business not found" });
-
-    const userId = req.user._id;
-
-    // Check if user already follows
-    if (business.followers.includes(userId)) {
-      return res
-        .status(400)
-        .json({ message: "Already following this business" });
-    }
-
-    // Add follower
-    business.followers.push(userId);
-    await business.save();
 
     res.json({
       success: true,
@@ -111,16 +116,13 @@ exports.followBusiness = async (req, res) => {
 
 exports.unfollowBusiness = async (req, res) => {
   try {
-    const business = await Business.findById(req.params.id);
+    const business = await Business.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { followers: req.user._id } },
+      { new: true },
+    );
     if (!business)
       return res.status(404).json({ message: "Business not found" });
-
-    const userId = req.user._id;
-
-    business.followers = (business.followers || []).filter(
-      (id) => id.toString() !== userId.toString()
-    );
-    await business.save();
 
     res.json({
       success: true,

@@ -227,6 +227,12 @@
   },
   "business": {
     "title": "دليل الأعمال",
+    "browseBusinesses": "استكشف الشركات والخدمات",
+    "account": "حساب أعمال",
+    "topBusinesses": "أبرز الأعمال",
+    "seeAll": "عرض الكل",
+    "findMore": "ابحث عن مزيد من الأعمال",
+    "view": "عرض",
     "heroTitle": "استكشف منظومة الأعمال",
     "heroSubtitle": "تواصل مع المشاريع سريعة النمو ومقدمي الخدمات وقادة الصناعة الموثّقين في شبكتنا العالمية.",
     "searchBusiness": "ابحث عن الأعمال...",
@@ -235,6 +241,7 @@
     "browseIndustries": "تصفح القطاعات",
     "follow": "متابعة",
     "following": "متابَع",
+    "followedBusinessesEmpty": "تابع الأنشطة التجارية لتظهر هنا.",
     "unfollowBusiness": "إلغاء المتابعة",
     "followBusiness": "متابعة النشاط",
     "editProfile": "تعديل الملف",
@@ -269,6 +276,7 @@
     "last30": "آخر 30 يوماً",
     "export": "تصدير البيانات",
     "calculating": "جارٍ حساب التحليلات...",
+    "loadFailed": "تعذر تحميل بيانات لوحة التحكم. يُرجى المحاولة مرة أخرى.",
     "setupRequired": "يلزم الإعداد",
     "setupDesc": "يرجى ربط حساب أعمال للوصول إلى التحليلات المهنية الفورية.",
     "linkBusiness": "ربط نشاط تجاري",
@@ -360,7 +368,18 @@
     "spent": "المصروف",
     "ends": "تنتهي",
     "budgetLabel": "الميزانية",
-    "viewsPlus": "+{n} مشاهدة"
+    "viewsPlus": "+{n} مشاهدة",
+    "campaignPerformance": "أداء الحملة",
+    "realtimeEngagementMetrics": "مقاييس التفاعل الفورية",
+    "impressions": "مرات الظهور",
+    "clicks": "النقرات",
+    "ctr": "معدل النقر",
+    "budgetUtilization": "استخدام الميزانية",
+    "remaining": "المتبقي",
+    "totalConversions": "إجمالي التحويلات",
+    "costPerClick": "التكلفة لكل نقرة",
+    "noAnalyticsYet": "لا تتوفر تحليلات لهذه الحملة بعد.",
+    "closeInsight": "إغلاق التحليلات"
   },
   "battles": {
     "title": "منافسات الصناعة",
@@ -705,15 +724,5 @@
       "deactivate": "تعطيل الحساب",
       "deleteAccount": "حذف الحساب"
     }
-  },
-  "business": {
-    "browseBusinesses": "استكشف الشركات والخدمات",
-    "account": "حساب أعمال",
-    "topBusinesses": "أبرز الأعمال",
-    "seeAll": "عرض الكل",
-    "findMore": "ابحث عن مزيد من الأعمال",
-    "view": "عرض",
-    "follow": "متابعة",
-    "following": "تتابعه"
   }
 }

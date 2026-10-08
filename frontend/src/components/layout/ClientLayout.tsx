@@ -47,7 +47,7 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
   return (
     <div className={`flex flex-col bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden ${
-      isMessagesPage ? 'h-screen overflow-hidden' : 'min-h-screen'
+        isMessagesPage ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
     }`}>
       {/* Dynamic Background */}
       <div className="bg-mesh pointer-events-none">

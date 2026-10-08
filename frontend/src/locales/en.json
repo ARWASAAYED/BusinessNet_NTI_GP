@@ -227,6 +227,12 @@
   },
   "business": {
     "title": "Business Directory",
+    "browseBusinesses": "Explore companies & services",
+    "account": "Business Account",
+    "topBusinesses": "Top Businesses",
+    "seeAll": "See all",
+    "findMore": "Find more businesses",
+    "view": "View",
     "heroTitle": "Explore the Business Ecosystem",
     "heroSubtitle": "Connect with high-growth ventures, service providers, and verified industry leaders in our global network.",
     "searchBusiness": "Search businesses...",
@@ -235,6 +241,7 @@
     "browseIndustries": "Browse Industries",
     "follow": "Follow",
     "following": "Following",
+    "followedBusinessesEmpty": "Follow businesses to see them here.",
     "unfollowBusiness": "UNFOLLOW",
     "followBusiness": "FOLLOW BUSINESS",
     "editProfile": "EDIT PROFILE",
@@ -269,6 +276,7 @@
     "last30": "Last 30 Days",
     "export": "Export Data",
     "calculating": "Calculating Intelligence...",
+    "loadFailed": "Dashboard data could not be loaded. Please try again.",
     "setupRequired": "Setup Required",
     "setupDesc": "Please link a business account to access real-time professional analytics.",
     "linkBusiness": "Link Business",
@@ -360,7 +368,18 @@
     "spent": "Spent",
     "ends": "Ends",
     "budgetLabel": "Budget",
-    "viewsPlus": "{n}+ views"
+    "viewsPlus": "{n}+ views",
+    "campaignPerformance": "Campaign Performance",
+    "realtimeEngagementMetrics": "Real-time engagement metrics",
+    "impressions": "Impressions",
+    "clicks": "Clicks",
+    "ctr": "CTR",
+    "budgetUtilization": "Budget Utilization",
+    "remaining": "Remaining",
+    "totalConversions": "Total Conversions",
+    "costPerClick": "Cost Per Click",
+    "noAnalyticsYet": "No analytics are available for this campaign yet.",
+    "closeInsight": "Close Insight"
   },
   "battles": {
     "title": "Industry Battles",
@@ -705,15 +724,5 @@
       "deactivate": "Deactivate",
       "deleteAccount": "Delete Account"
     }
-  },
-  "business": {
-    "browseBusinesses": "Explore companies & services",
-    "account": "Business Account",
-    "topBusinesses": "Top Businesses",
-    "seeAll": "See all",
-    "findMore": "Find more businesses",
-    "view": "View",
-    "follow": "Follow",
-    "following": "Following"
   }
 }

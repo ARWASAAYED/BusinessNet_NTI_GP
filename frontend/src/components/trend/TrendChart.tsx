@@ -43,7 +43,8 @@ export default function TrendChart({
   const chartHeight = height - padding * 2;
 
   const points = data.map((point, index) => {
-    const x = padding + (index / (data.length - 1)) * chartWidth;
+    const position = data.length > 1 ? index / (data.length - 1) : 0.5;
+    const x = padding + position * chartWidth;
     const y = padding + chartHeight - ((point.value - minValue) / range) * chartHeight;
     return { x, y, value: point.value };
   });

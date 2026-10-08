@@ -82,7 +82,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         {/* Emoji Button */}
         <button
           type="button"
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors shrink-0"
+          className="hidden sm:block p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors shrink-0"
           aria-label="Add emoji"
           title="Add emoji"
         >
@@ -92,7 +92,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         {/* Attachment Button */}
         <button
           type="button"
-          className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors shrink-0"
+          className="hidden sm:block p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors shrink-0"
           aria-label="Attach file"
           title="Attach file"
         >

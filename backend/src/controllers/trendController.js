@@ -1,6 +1,7 @@
 const Trend = require('../models/trend');
 const Keyword = require('../models/keyword');
 const Post = require('../models/post');
+const Business = require('../models/business');
 
 // Get global trending topics (aggregated keywords/trends)
 exports.getTrendingTopics = async (req, res, next) => {
@@ -21,11 +22,16 @@ exports.getTrendingTopics = async (req, res, next) => {
             }).select('_id word');
 
             // 2. Hashtags from posts in this category
+            const categoryHashtags = await Hashtag.find({ name: catRegex }).select('_id');
+            const categoryBusinesses = await Business.find({
+                $or: [{ industry: catRegex }, { category: catRegex }]
+            }).select('_id');
             const categoryPosts = await Post.find({
                 $or: [
                     { tag: catRegex },
                     { aiKeywords: catRegex },
-                    { content: new RegExp(category, 'i') }
+                    { hashtags: { $in: categoryHashtags.map(h => h._id) } },
+                    { businessId: { $in: categoryBusinesses.map(b => b._id) } }
                 ]
             }).select('hashtags');
 
@@ -43,9 +49,7 @@ exports.getTrendingTopics = async (req, res, next) => {
             ]);
 
             matchingKeywordIds = Array.from(allKwIds);
-            if (matchingKeywordIds.length > 0) {
-                query.keywordId = { $in: matchingKeywordIds };
-            }
+            query.keywordId = { $in: matchingKeywordIds };
         }
 
         // 1. Fetch Promoted Trends
@@ -80,11 +84,16 @@ exports.getTrendingTopics = async (req, res, next) => {
         // Fallback: If no Trend records exist yet for this category, fetch directly from category posts or keywords
         if (trends.length === 0 && category && category !== 'All') {
             const catRegex = new RegExp(category, 'i');
+            const categoryHashtags = await Hashtag.find({ name: catRegex }).select('_id');
+            const categoryBusinesses = await Business.find({
+                $or: [{ industry: catRegex }, { category: catRegex }]
+            }).select('_id');
             const categoryPosts = await Post.find({
                 $or: [
                     { tag: catRegex },
                     { aiKeywords: catRegex },
-                    { content: new RegExp(category, 'i') }
+                    { hashtags: { $in: categoryHashtags.map(h => h._id) } },
+                    { businessId: { $in: categoryBusinesses.map(b => b._id) } }
                 ]
             }).select('hashtags');
 
@@ -94,20 +103,9 @@ exports.getTrendingTopics = async (req, res, next) => {
                 $or: [{ category: catRegex }, { word: catRegex }]
             }).sort({ frequency: -1 }).limit(10);
 
-            const categoryDefaults = {
-                Technology: ['AI', 'TechTrends', 'WebDev', 'CloudComputing', 'CyberSecurity', 'MachineLearning', 'Innovation'],
-                Business: ['Startup', 'Leadership', 'VentureCapital', 'BusinessGrowth', 'Innovation', 'Management'],
-                Finance: ['FinTech', 'Investment', 'Crypto', 'Banking', 'PersonalFinance', 'WealthManagement'],
-                Design: ['UIUX', 'ProductDesign', 'WebDesign', 'DesignSystem', 'CreativeDirection', 'GraphicDesign'],
-                Marketing: ['DigitalMarketing', 'ContentStrategy', 'SEO', 'Branding', 'SocialMedia', 'GrowthHacking']
-            };
-
-            const defaultList = categoryDefaults[category] || [category, `${category}Trends`, `${category}Pro`];
-
             const combined = [
                 ...catHashtags.map(h => ({ name: h.name, count: h.count })),
-                ...fallbackKeywords.map(k => ({ name: k.word, count: k.frequency })),
-                ...defaultList.map((d, i) => ({ name: d, count: 65 - (i * 7) }))
+                ...fallbackKeywords.map(k => ({ name: k.word, count: k.frequency }))
             ];
 
             const seen = new Set();
@@ -123,16 +121,10 @@ exports.getTrendingTopics = async (req, res, next) => {
             const formattedFallback = uniqueItems.slice(0, parseInt(limit) || 10).map((kw, idx) => ({
                 _id: `fallback-${category}-${idx}`,
                 name: kw.name,
-                count: kw.count || Math.floor(Math.random() * 80) + 20,
-                growth: parseFloat((14.5 - (idx * 1.8)).toFixed(1)),
+                count: kw.count || 0,
                 isPromoted: false,
                 category: category,
-                keywordId: `kw-${category}-${idx}`,
-                pulse: {
-                    high: Math.round((kw.count || 50) * 1.2),
-                    low: Math.round((kw.count || 50) * 0.8),
-                    volume: 6 + idx
-                }
+                keywordId: `kw-${category}-${idx}`
             }));
 
             return res.json({
@@ -149,22 +141,23 @@ exports.getTrendingTopics = async (req, res, next) => {
             const keywordCategory = isPopulated ? t.keywordId.category : 'General';
             const keywordId = isPopulated ? t.keywordId._id : t.keywordId;
             const promotion = t.promotedTrendId || {};
-            const pulseGrowth = t.dailyChange || (Math.random() * (t.velocity || 5) * 2).toFixed(1);
-            const isNegative = Math.random() > 0.8;
+            const pulseGrowth = Number(t.dailyChange || 0);
             
             return {
                 _id: t._id,
                 name: keywordWord, 
                 count: Math.round(t.score || 0),
-                growth: isNegative ? -Math.abs(pulseGrowth) : Math.abs(pulseGrowth),
+                growth: pulseGrowth,
                 isPromoted: !!t.promotedTrendId, 
                 promotionLabel: promotion.adPackage ? `${promotion.adPackage} PROMOTION` : 'Promoted',
                 category: keywordCategory,
                 keywordId: keywordId,
                 postId: t.postId,
+                history: (t.weeklyHistory || []).map(point => ({
+                    date: point.date,
+                    score: point.score
+                })),
                 pulse: {
-                    high: Math.round((t.score || 0) * 1.2),
-                    low: Math.round((t.score || 0) * 0.8),
                     volume: t.velocity || 0
                 }
             };
@@ -193,18 +186,20 @@ exports.getTrendingPosts = async (req, res, next) => {
         
         if (category && category !== 'All') {
             const regex = new RegExp(category, 'i');
-            
-            // 1. Find matching hashtags IDs first
-            const hashtags = await require('../models/hashtag').find({ name: regex });
-            const hashtagIds = hashtags.map(h => h._id);
+            const Hashtag = require('../models/hashtag');
+            const [hashtags, businesses] = await Promise.all([
+                Hashtag.find({ name: regex }).select('_id'),
+                Business.find({
+                    $or: [{ industry: regex }, { category: regex }]
+                }).select('_id')
+            ]);
 
-            // 2. Build multi-field query matching the category
             query = {
                 $or: [
                     { tag: { $regex: regex } },
-                    { aiKeywords: { $regex: regex } }, 
-                    { hashtags: { $in: hashtagIds } },
-                    { content: { $regex: regex } }
+                    { aiKeywords: { $regex: regex } },
+                    { hashtags: { $in: hashtags.map(h => h._id) } },
+                    { businessId: { $in: businesses.map(b => b._id) } }
                 ]
             };
         }

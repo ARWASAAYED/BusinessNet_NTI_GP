@@ -18,7 +18,7 @@ const Sidebar = () => {
   const { unreadCount } = useNotifications();
   const { t, isRTL } = useLanguage();
   const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
-  const [topBusinesses, setTopBusinesses] = useState<Business[]>([]);
+  const [followedBusinesses, setFollowedBusinesses] = useState<Business[]>([]);
 
   useEffect(() => {
     const fetchJoinedCommunities = async () => {
@@ -32,19 +32,27 @@ const Sidebar = () => {
       }
     };
 
-    const fetchTopBusinesses = async () => {
+    const fetchFollowedBusinesses = async () => {
+      if (!user) {
+        setFollowedBusinesses([]);
+        return;
+      }
       try {
-        const data = await businessService.getByCategory('All', 1, 3);
-        setTopBusinesses(data.businesses || []);
+        const data = await businessService.getFollowedBusinesses();
+        setFollowedBusinesses(data);
       } catch (error) {
-        console.error('Failed to fetch top businesses for sidebar:', error);
+        console.error('Failed to fetch followed businesses for sidebar:', error);
       }
     };
 
     fetchJoinedCommunities();
-    fetchTopBusinesses();
+    fetchFollowedBusinesses();
     window.addEventListener('community:updated', fetchJoinedCommunities);
-    return () => window.removeEventListener('community:updated', fetchJoinedCommunities);
+    window.addEventListener('business:updated', fetchFollowedBusinesses);
+    return () => {
+      window.removeEventListener('community:updated', fetchJoinedCommunities);
+      window.removeEventListener('business:updated', fetchFollowedBusinesses);
+    };
   }, [user]);
 
   const isBusinessUser = user?.accountType === 'business' || user?.businessId;
@@ -193,7 +201,7 @@ const Sidebar = () => {
       <div className="pt-4 border-t border-gray-100 dark:border-white/5">
         <div className="flex items-center justify-between px-4 mb-3">
           <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-            {t('business.topBusinesses') || 'Top Businesses'}
+            {t('business.following')}
           </h3>
           <Link href="/business">
             <Building2 className="w-4 h-4 text-gray-400 hover:text-primary-500 cursor-pointer transition-colors" />
@@ -201,7 +209,7 @@ const Sidebar = () => {
         </div>
         
         <div className="space-y-1">
-          {topBusinesses.map((biz) => (
+          {followedBusinesses.map((biz) => (
             <Link
               key={biz._id}
               href={`/business/${biz._id}`}
@@ -218,9 +226,9 @@ const Sidebar = () => {
               </div>
             </Link>
           ))}
-          {topBusinesses.length === 0 && (
+          {followedBusinesses.length === 0 && (
             <p className="px-4 text-[10px] text-gray-400 italic">
-              {t('business.browseBusinesses') || 'Explore companies'}
+              {t('business.followedBusinessesEmpty')}
             </p>
           )}
         </div>
