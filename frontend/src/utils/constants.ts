@@ -1,13 +1,23 @@
 // API Constants
-const getClientOrigin = () =>
-  typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
+const getProductionBackendOrigin = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.includes('vercel.app')) {
+      return 'https://businessnet-backend.vercel.app';
+    }
+    return window.location.origin;
+  }
+  return process.env.NODE_ENV === 'production'
+    ? 'https://businessnet-backend.vercel.app'
+    : 'http://localhost:5000';
+};
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
-  `${getClientOrigin()}/api/v1`;
+  `${getProductionBackendOrigin()}/api/v1`;
 
 export const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || getClientOrigin();
+  process.env.NEXT_PUBLIC_SOCKET_URL || getProductionBackendOrigin();
 
 // App Routes
 export const ROUTES = {

@@ -32,11 +32,15 @@ const Avatar: React.FC<AvatarProps> = ({
 
   const getFullUrl = (path?: string) => {
     if (!path) return undefined;
-    if (path.startsWith('http')) return path;
+    if (path.startsWith('http') || path.startsWith('data:') || path.startsWith('blob:')) return path;
     const baseUrl =
       process.env.NEXT_PUBLIC_SOCKET_URL ||
-      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
-    return `${baseUrl}${path}`;
+      (typeof window !== 'undefined'
+        ? window.location.hostname.includes('vercel.app')
+          ? 'https://businessnet-backend.vercel.app'
+          : window.location.origin
+        : 'http://localhost:5000');
+    return path.startsWith('/') ? `${baseUrl}${path}` : `${baseUrl}/${path}`;
   };
 
   const resolvedSrc = getFullUrl(src);
