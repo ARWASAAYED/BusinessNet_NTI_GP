@@ -13,42 +13,30 @@ exports.getTrendingTopics = async (req, res, next) => {
         if (status) query.status = status;
 
         let matchingKeywordIds = [];
-        if (category && category !== 'All') {
-            const catRegex = new RegExp(`^${category}$|${category}`, 'i');
+        if (category && category !== "All") {
+            const catRegex = new RegExp(`^${category}$|${category}`, "i");
             
-            // 1. Direct keywords with matching category or word
+            // Define domain mappings for standard categories
+            const domainAliases = {
+                technology: ["technology", "tech", "software", "ai", "machinelearning", "webdev", "react", "nextjs", "cybersecurity", "cloudnative", "devops", "python", "esg"],
+                business: ["business", "marketing", "startup", "entrepreneurship", "sustainability", "b2b", "management"],
+                finance: ["finance", "fintech", "crypto", "banking", "venture", "growth", "remotework"],
+                design: ["design", "uidesign", "productled", "ux", "ui"]
+            };
+
+            const lowerCat = category.toLowerCase();
+            const aliasWords = domainAliases[lowerCat] || [];
+
+            // Match keywords whose category matches OR whose word matches domain aliases
             const directKeywords = await Keyword.find({
-                $or: [{ category: catRegex }, { word: catRegex }]
-            }).select('_id word');
-
-            // 2. Hashtags from posts in this category
-            const categoryHashtags = await Hashtag.find({ name: catRegex }).select('_id');
-            const categoryBusinesses = await Business.find({
-                $or: [{ industry: catRegex }, { category: catRegex }]
-            }).select('_id');
-            const categoryPosts = await Post.find({
                 $or: [
-                    { tag: catRegex },
-                    { aiKeywords: catRegex },
-                    { hashtags: { $in: categoryHashtags.map(h => h._id) } },
-                    { businessId: { $in: categoryBusinesses.map(b => b._id) } }
+                    { category: catRegex },
+                    { word: catRegex },
+                    { word: { $in: aliasWords } }
                 ]
-            }).select('hashtags');
+            }).select("_id word category");
 
-            const postHashtagIds = categoryPosts.flatMap(p => p.hashtags || []);
-            const postHashtags = await Hashtag.find({ _id: { $in: postHashtagIds } }).select('name');
-            const postWords = postHashtags.map(h => h.name);
-
-            const hashtagKeywords = await Keyword.find({
-                word: { $in: postWords.map(w => new RegExp(`^${w}$`, 'i')) }
-            }).select('_id word');
-
-            const allKwIds = new Set([
-                ...directKeywords.map(k => k._id.toString()),
-                ...hashtagKeywords.map(k => k._id.toString())
-            ]);
-
-            matchingKeywordIds = Array.from(allKwIds);
+            matchingKeywordIds = directKeywords.map(k => k._id.toString());
             query.keywordId = { $in: matchingKeywordIds };
         }
 
@@ -58,9 +46,9 @@ exports.getTrendingTopics = async (req, res, next) => {
             promotedTrendId: { $ne: null },
             score: { $gte: 0 }
         })
-        .populate('keywordId')
-        .populate('postId')
-        .populate('promotedTrendId')
+        .populate("keywordId")
+        .populate("postId")
+        .populate("promotedTrendId")
         .sort({ score: -1 })
         .limit(3);
 
@@ -70,8 +58,8 @@ exports.getTrendingTopics = async (req, res, next) => {
             promotedTrendId: null,
             score: { $gt: 0 } 
         })
-        .populate('keywordId')
-        .populate('postId')
+        .populate("keywordId")
+        .populate("postId")
         .sort({ score: -1 })
         .limit(parseInt(limit) || 10);
 
@@ -80,6 +68,26 @@ exports.getTrendingTopics = async (req, res, next) => {
         organicTrends = organicTrends.filter(t => t.keywordId && t.keywordId.word);
 
         let trends = [...promotedTrends, ...organicTrends];
+
+        // Strict category validation to ensure no cross-category leaks
+        if (category && category !== 'All') {
+            const lowerCat = category.toLowerCase();
+            const domainAliases = {
+                technology: ["technology", "tech", "software", "ai", "machinelearning", "webdev", "react", "nextjs", "cybersecurity", "cloudnative", "devops", "python", "esg"],
+                business: ["business", "marketing", "startup", "entrepreneurship", "sustainability", "b2b", "management"],
+                finance: ["finance", "fintech", "crypto", "banking", "venture", "growth", "remotework"],
+                design: ["design", "uidesign", "productled", "ux", "ui"]
+            };
+            const aliasWords = domainAliases[lowerCat] || [];
+
+            trends = trends.filter(t => {
+                const kw = t.keywordId;
+                if (!kw) return false;
+                const kwCat = (kw.category || '').toLowerCase();
+                const kwWord = (kw.word || '').toLowerCase();
+                return kwCat === lowerCat || kwWord === lowerCat || aliasWords.includes(kwWord);
+            });
+        }
 
         // Fallback: If no Trend records exist yet for this category, fetch directly from category posts or keywords
         if (trends.length === 0 && category && category !== 'All') {

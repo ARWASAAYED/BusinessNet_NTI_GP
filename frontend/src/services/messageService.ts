@@ -34,6 +34,7 @@ export interface Conversation {
 export interface SendMessageData {
   receiverId: string;
   content: string;
+  media?: File[];
 }
 
 const messageService = {
@@ -55,9 +56,17 @@ const messageService = {
     return response.data.data;
   },
 
-  // Send message
+  // Send message (supports optional media attachments)
   sendMessage: async (data: SendMessageData): Promise<Message> => {
-    const response = await api.post('/messages', data);
+    if (data.media && data.media.length > 0) {
+      const formData = new FormData();
+      formData.append('receiverId', data.receiverId);
+      formData.append('content', data.content);
+      data.media.forEach(file => formData.append('media', file));
+      const response = await api.post('/messages', formData);
+      return response.data.data;
+    }
+    const response = await api.post('/messages', { receiverId: data.receiverId, content: data.content });
     return response.data.data;
   },
 

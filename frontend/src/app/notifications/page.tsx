@@ -20,8 +20,15 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/layout/LanguageProvider";
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    loadNotifications,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications();
   const { t, locale } = useLanguage();
   const router = useRouter();
 
@@ -63,10 +70,10 @@ export default function NotificationsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100">
-                {t('notifications.title')}
+                {t("notifications.title")}
               </h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
-                {t('notifications.subtitle')}
+                {t("notifications.subtitle")}
               </p>
             </div>
           </div>
@@ -76,14 +83,19 @@ export default function NotificationsPage() {
               className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-xl font-bold text-sm hover:bg-primary-600 transition-colors"
             >
               <CheckCheck className="w-4 h-4" />
-              {t('notifications.markAllRead')}
+              {t("notifications.markAllRead")}
             </button>
           )}
         </div>
         {unreadCount > 0 && (
           <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-full text-xs font-bold">
             <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            {t(unreadCount === 1 ? 'notifications.unread' : 'notifications.unreadPlural', { count: unreadCount })}
+            {t(
+              unreadCount === 1
+                ? "notifications.unread"
+                : "notifications.unreadPlural",
+              { count: unreadCount },
+            )}
           </div>
         )}
       </div>
@@ -93,17 +105,38 @@ export default function NotificationsPage() {
         <div className="flex flex-col items-center justify-center py-20">
           <Spinner size="lg" />
           <p className="mt-4 text-sm text-gray-500 font-medium">
-            {t('notifications.loading')}
+            {t("notifications.loading")}
           </p>
         </div>
+      ) : error ? (
+        <Card className="p-12 text-center space-y-5">
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-red-50 dark:bg-red-950/30 flex items-center justify-center text-red-500">
+            <Bell className="w-8 h-8" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              {t("notifications.failedToLoad") ||
+                "Could not load notifications"}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 break-words">
+              {error}
+            </p>
+          </div>
+          <button
+            onClick={loadNotifications}
+            className="px-5 py-2.5 bg-primary-500 text-white rounded-xl font-bold hover:bg-primary-600 transition-colors"
+          >
+            {t("common.retry") || "Retry"}
+          </button>
+        </Card>
       ) : notifications.length === 0 ? (
         <Card className="p-20 text-center">
           <Bell className="w-16 h-16 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
           <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('notifications.noNotifications')}
+            {t("notifications.noNotifications")}
           </h3>
           <p className="text-gray-500 max-w-sm mx-auto">
-            {t('notifications.emptyDesc')}
+            {t("notifications.emptyDesc")}
           </p>
         </Card>
       ) : (

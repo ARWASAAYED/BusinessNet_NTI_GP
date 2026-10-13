@@ -33,7 +33,9 @@ const Avatar: React.FC<AvatarProps> = ({
   const getFullUrl = (path?: string) => {
     if (!path) return undefined;
     if (path.startsWith('http')) return path;
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
     return `${baseUrl}${path}`;
   };
 

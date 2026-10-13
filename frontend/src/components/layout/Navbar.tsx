@@ -1,25 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { Home, Users, Building2, MessageSquare, Bell, Search, LogOut, User, Settings, TrendingUp, Megaphone, Compass } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import Avatar from '../common/Avatar';
-import Dropdown from '../common/Dropdown';
-import NotificationBell from '../notification/NotificationBell';
-import NotificationList from '../notification/NotificationList';
-import ThemeToggle from '../common/ThemeToggle';
-import LanguageToggle from '../common/LanguageToggle';
-import { useAuth } from '@/hooks/useAuth';
-import { useNotifications } from '@/hooks/useNotifications';
-import { useLanguage } from './LanguageProvider';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Home,
+  Users,
+  Building2,
+  MessageSquare,
+  Bell,
+  Search,
+  LogOut,
+  User,
+  Settings,
+  TrendingUp,
+  Megaphone,
+  Compass,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Avatar from "../common/Avatar";
+import Dropdown from "../common/Dropdown";
+import NotificationBell from "../notification/NotificationBell";
+import NotificationList from "../notification/NotificationList";
+import ThemeToggle from "../common/ThemeToggle";
+import LanguageToggle from "../common/LanguageToggle";
+import { useAuth } from "@/hooks/useAuth";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useLanguage } from "./LanguageProvider";
 
 const Navbar = () => {
   const pathname = usePathname();
   const router = useRouter();
-  
-  if (pathname === '/login' || pathname === '/register') return null;
   const { user, isAuthenticated, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const { t, isRTL } = useLanguage();
@@ -30,26 +41,28 @@ const Navbar = () => {
     setMounted(true);
   }, []);
 
+  if (pathname === "/login" || pathname === "/register") return null;
+
   const userMenuItems = [
     {
-      label: t('nav.profile'),
+      label: t("nav.profile"),
       onClick: () => {
         const userId = user?.id || user?._id;
         if (userId) {
           router.push(`/profile/${userId}`);
         } else {
-          console.warn('Navbar: Cannot navigate to profile, userId missing');
+          console.warn("Navbar: Cannot navigate to profile, userId missing");
         }
       },
       icon: <User className="w-4 h-4" />,
     },
     {
-      label: t('nav.settings'),
-      onClick: () => router.push('/settings'),
+      label: t("nav.settings"),
+      onClick: () => router.push("/settings"),
       icon: <Settings className="w-4 h-4" />,
     },
     {
-      label: t('nav.logout'),
+      label: t("nav.logout"),
       onClick: logout,
       icon: <LogOut className="w-4 h-4" />,
       danger: true,
@@ -59,36 +72,44 @@ const Navbar = () => {
   if (!mounted || !isAuthenticated) {
     return (
       <nav className="glass-effect border-b border-gray-200 dark:border-gray-800 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link href="/" className="flex items-center gap-2 group">
-              <div className="w-9 h-9 rounded-xl gradient-bg-primary flex items-center justify-center shadow-md shadow-primary-500/30">
-                <span className="text-white font-black text-xl">{t('app.letter')}</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16 gap-2 min-w-0">
+            <Link
+              href="/"
+              className="flex items-center gap-2 group min-w-0 shrink-0"
+            >
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl gradient-bg-primary flex items-center justify-center shadow-md shadow-primary-500/30 shrink-0">
+                <span className="text-white font-black text-lg sm:text-xl">
+                  {t("app.letter")}
+                </span>
               </div>
-              <span className="text-xl font-black gradient-text">{t('app.name')}</span>
+              <span className="text-lg font-black gradient-text hidden sm:block sm:text-xl">
+                {t("app.name")}
+              </span>
             </Link>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
               <Link
                 href="/feed"
                 className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 <Compass className="w-4 h-4 text-primary-500" />
-                <span>{t('nav.feed')}</span>
+                <span>{t("nav.feed")}</span>
               </Link>
               <LanguageToggle />
               <ThemeToggle />
               <Link
                 href="/login"
-                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-bold transition-smooth"
+                className="hidden sm:inline px-3 py-2 text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-smooth"
               >
-                {t('nav.signIn')}
+                {t("nav.signIn")}
               </Link>
               <Link
                 href="/register"
-                className="px-5 py-2 text-sm font-bold gradient-bg-primary text-white rounded-xl hover:shadow-lg hover:shadow-primary-500/40 transition-smooth"
+                className="px-3 py-2 text-xs sm:px-5 sm:text-sm font-bold gradient-bg-primary text-white rounded-xl hover:shadow-lg hover:shadow-primary-500/40 transition-smooth shrink-0"
               >
-                {t('nav.getStarted')}
+                <span className="hidden sm:inline">{t("nav.getStarted")}</span>
+                <span className="sm:hidden">Start</span>
               </Link>
             </div>
           </div>
@@ -103,13 +124,17 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/feed" className="flex items-center gap-3 group">
-            <motion.div 
+            <motion.div
               whileHover={{ rotate: isRTL ? -10 : 10, scale: 1.1 }}
               className="w-10 h-10 rounded-xl gradient-bg-primary flex items-center justify-center shadow-lg shadow-primary-500/30"
             >
-              <span className="text-white font-black text-2xl tracking-tighter">{t('app.letter')}</span>
+              <span className="text-white font-black text-2xl tracking-tighter">
+                {t("app.letter")}
+              </span>
             </motion.div>
-            <span className="text-2xl font-black gradient-text hidden sm:block">{t('app.name')}</span>
+            <span className="text-2xl font-black gradient-text hidden sm:block">
+              {t("app.name")}
+            </span>
           </Link>
 
           {/* Search */}
@@ -118,12 +143,14 @@ const Navbar = () => {
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder={t('nav.search')}
+                placeholder={t("nav.search")}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     const query = (e.target as HTMLInputElement).value;
                     if (query.trim()) {
-                      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+                      router.push(
+                        `/search?q=${encodeURIComponent(query.trim())}`,
+                      );
                     }
                   }
                 }}
@@ -146,7 +173,7 @@ const Navbar = () => {
                 count={unreadCount}
                 onClick={() => setShowNotifications(!showNotifications)}
               />
-              
+
               <AnimatePresence>
                 {showNotifications && (
                   <>
@@ -163,7 +190,9 @@ const Navbar = () => {
                       exit={{ opacity: 0, y: -10, scale: 0.95 }}
                       className="fixed sm:absolute end-4 sm:end-0 top-16 sm:top-full mt-2 z-50"
                     >
-                      <NotificationList onClose={() => setShowNotifications(false)} />
+                      <NotificationList
+                        onClose={() => setShowNotifications(false)}
+                      />
                     </motion.div>
                   </>
                 )}
@@ -175,8 +204,14 @@ const Navbar = () => {
               align="end"
               trigger={
                 <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
-                  <Avatar src={user?.avatar} alt={user?.username || 'User'} size="sm" />
-                  <span className="font-medium text-gray-700 dark:text-gray-300 hidden lg:block">{user?.username}</span>
+                  <Avatar
+                    src={user?.avatar}
+                    alt={user?.username || "User"}
+                    size="sm"
+                  />
+                  <span className="font-medium text-gray-700 dark:text-gray-300 hidden lg:block">
+                    {user?.username}
+                  </span>
                 </div>
               }
               items={userMenuItems}

@@ -1,73 +1,73 @@
-const multer = require('multer');
-const path = require('path');
-const { uploadFile } = require('../services/supabaseService');
+const multer = require("multer");
+const { uploadFile } = require("../services/gridfsService");
 
-// Use memory storage — files are processed in RAM and uploaded to Supabase (no disk writes)
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+  const mimetype = (file.mimetype || "").toLowerCase();
+  const name = (file.originalname || "").toLowerCase();
+  const isImageOrVideoMime =
+    mimetype.startsWith("image/") || mimetype.startsWith("video/");
+  const isImageOrVideoExt =
+    /\.(jpe?g|png|gif|webp|svg|bmp|heic|heif|mp4|webm|mov|mkv|avi|m4v|3gp|flv)$/i.test(name);
+
+  if (isImageOrVideoMime || isImageOrVideoExt) {
+    if (!mimetype || mimetype === "application/octet-stream") {
+      if (/\.(mp4|m4v)$/i.test(name)) file.mimetype = "video/mp4";
+      else if (/\.webm$/i.test(name)) file.mimetype = "video/webm";
+      else if (/\.mov$/i.test(name)) file.mimetype = "video/quicktime";
+      else if (/\.3gp$/i.test(name)) file.mimetype = "video/3gpp";
+      else if (/\.png$/i.test(name)) file.mimetype = "image/png";
+      else if (/\.(jpe?g)$/i.test(name)) file.mimetype = "image/jpeg";
+      else if (/\.webp$/i.test(name)) file.mimetype = "image/webp";
+      else if (/\.gif$/i.test(name)) file.mimetype = "image/gif";
+    }
     cb(null, true);
   } else {
-    cb(new Error('Only images and videos are allowed!'), false);
+    cb(new Error("Only images and videos are allowed!"), false);
   }
 };
 
 const upload = multer({
-  storage: storage,
+  storage,
   limits: {
-    fileSize: 50 * 1024 * 1024, // 50MB limit
+    fileSize: 100 * 1024 * 1024, // 100MB for modern photos and videos
   },
-  fileFilter: fileFilter,
+  fileFilter,
 });
 
-/**
- * After multer populates req.file / req.files,
- * this middleware uploads them to Supabase and rewrites the paths to public URLs.
- */
-const uploadToSupabase = async (req, res, next) => {
+const uploadToGridFS = async (req, res, next) => {
   try {
-    // Single file: req.file
-    if (req.file) {
-      const ext = path.extname(req.file.originalname);
-      const fileName = `${req.file.fieldname}/${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-      const publicUrl = await uploadFile(req.file.buffer, fileName, req.file.mimetype);
-      req.file.path = publicUrl;   // overwrite path with Supabase URL
-      req.file.supabasePath = fileName;
-    }
+    const files = req.file
+      ? [req.file]
+      : Array.isArray(req.files)
+        ? req.files
+        : Object.values(req.files || {}).flat();
 
-    // Multiple files (array): req.files as array
-    if (Array.isArray(req.files) && req.files.length > 0) {
-      for (const file of req.files) {
-        const ext = path.extname(file.originalname);
-        const fileName = `${file.fieldname}/${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-        const publicUrl = await uploadFile(file.buffer, fileName, file.mimetype);
-        file.path = publicUrl;
-        file.supabasePath = fileName;
-      }
-    }
-
-    // Multiple files (fields): req.files as object
-    if (req.files && !Array.isArray(req.files) && typeof req.files === 'object') {
-      for (const fieldName of Object.keys(req.files)) {
-        for (const file of req.files[fieldName]) {
-          const ext = path.extname(file.originalname);
-          const fileName = `${fieldName}/${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-          const publicUrl = await uploadFile(file.buffer, fileName, file.mimetype);
-          file.path = publicUrl;
-          file.supabasePath = fileName;
-        }
-      }
+    for (const file of files) {
+      if (!file.buffer) continue;
+      file.userId = req.user?._id?.toString() || null;
+      file.fieldname = file.fieldname || "media";
+      const storedFile = await uploadFile(file);
+      file.path = storedFile.url;
+      file.url = storedFile.url;
+      file.filename = storedFile.filename;
+      file.gridfsId = storedFile.id.toString();
     }
 
     next();
   } catch (error) {
-    console.error('Supabase upload middleware error:', error.message);
+    console.error("GridFS upload middleware error:", error.message);
     next(error);
   }
 };
 
-// Export helpers that chain multer + supabase upload
-exports.uploadSingle = (fieldName) => [upload.single(fieldName), uploadToSupabase];
-exports.uploadArray = (fieldName, maxCount) => [upload.array(fieldName, maxCount), uploadToSupabase];
-exports.uploadFields = (fields) => [upload.fields(fields), uploadToSupabase];
+exports.uploadSingle = (fieldName) => [
+  upload.single(fieldName),
+  uploadToGridFS,
+];
+exports.uploadArray = (fieldName, maxCount) => [
+  upload.array(fieldName, maxCount),
+  uploadToGridFS,
+];
+exports.uploadFields = (fields) => [upload.fields(fields), uploadToGridFS];

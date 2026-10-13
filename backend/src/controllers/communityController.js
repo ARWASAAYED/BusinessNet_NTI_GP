@@ -226,7 +226,8 @@ exports.createCommunity = async (req, res, next) => {
     };
 
     if (req.files && req.files.length > 0) {
-      communityData.coverImage = `/uploads/${req.files[0].filename}`;
+      const f = req.files[0];
+      communityData.coverImage = f.path || f.url || (f.filename ? `/uploads/${f.filename}` : "");
     }
 
     const community = await Community.create(communityData);
@@ -290,7 +291,8 @@ exports.updateCommunity = async (req, res, next) => {
     };
 
     if (req.files && req.files.length > 0) {
-      updates.coverImage = `/uploads/${req.files[0].filename}`;
+      const f = req.files[0];
+      updates.coverImage = f.path || f.url || (f.filename ? `/uploads/${f.filename}` : "");
     }
 
     const updatedCommunity = await Community.findByIdAndUpdate(

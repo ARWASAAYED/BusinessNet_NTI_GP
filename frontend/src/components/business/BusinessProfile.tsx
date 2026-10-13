@@ -59,7 +59,10 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
     if (!path) return undefined;
     if (path.startsWith("http")) return path;
     const baseUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:5000");
     return `${baseUrl}${path}`;
   };
 
@@ -98,6 +101,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
         await businessService.followBusiness(businessId);
         setIsFollowing(true);
       }
+      window.dispatchEvent(new Event("business:updated"));
     } catch (error) {
       console.error("Follow action failed:", error);
     }
@@ -163,20 +167,20 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
           )}
         </div>
 
-        <div className="px-10 pb-10">
-          <div className="relative flex justify-between items-end -mt-20 mb-8 z-20">
+        <div className="px-4 sm:px-8 md:px-10 pb-6 sm:pb-10">
+          <div className="relative flex flex-col sm:flex-row justify-between items-start sm:items-end -mt-16 sm:-mt-20 mb-6 sm:mb-8 z-20 gap-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              className="p-1 bg-white dark:bg-gray-900 rounded-[2.5rem] shadow-2xl"
+              className="p-1 bg-white dark:bg-gray-900 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl shrink-0"
             >
               <Avatar
                 src={business.logo}
                 alt={business.name}
-                className="w-40 h-40 rounded-[2.2rem] object-cover border-4 border-white dark:border-gray-900"
+                className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 rounded-[1.8rem] sm:rounded-[2.2rem] object-cover border-4 border-white dark:border-gray-900"
               />
             </motion.div>
 
-            <div className="flex gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto mb-2 sm:mb-4">
               {business.userId !== currentUserId && (
                 <MessageButton
                   userId={business.userId}
@@ -188,7 +192,7 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                  <Button
                   variant="secondary"
                   onClick={() => setShowEditProfile(true)}
-                  className="rounded-2xl px-10 h-14 font-black tracking-wide text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  className="rounded-2xl px-5 sm:px-10 h-11 sm:h-14 font-black tracking-wide text-xs sm:text-sm bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-700 whitespace-nowrap"
                 >
                   {t('business.editProfile')}
                 </Button>
@@ -196,22 +200,22 @@ export default function BusinessProfile({ businessId }: BusinessProfileProps) {
                 <Button
                   variant={isFollowing ? "outline" : "primary"}
                   onClick={handleFollow}
-                  className="rounded-2xl px-10 h-14 font-black tracking-wide text-sm"
+                  className="rounded-2xl px-5 sm:px-10 h-11 sm:h-14 font-black tracking-wide text-xs sm:text-sm whitespace-nowrap"
                 >
                   {isFollowing ? t('business.unfollowBusiness') : t('business.followBusiness')}
                 </Button>
               )}
               <Button
                 variant="ghost"
-                className="w-14 h-14 rounded-2xl glass-effect p-0"
+                className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl glass-effect p-0 shrink-0"
               >
-                <Share2 className="w-6 h-6" />
+                <Share2 className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
               <Button
                 variant="ghost"
-                className="w-14 h-14 rounded-2xl glass-effect p-0"
+                className="w-11 h-11 sm:w-14 sm:h-14 rounded-2xl glass-effect p-0 shrink-0"
               >
-                <MoreHorizontal className="w-6 h-6" />
+                <MoreHorizontal className="w-5 h-5 sm:w-6 sm:h-6" />
               </Button>
             </div>
           </div>

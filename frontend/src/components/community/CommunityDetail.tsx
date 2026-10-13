@@ -45,7 +45,10 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
     if (!path) return undefined;
     if (path.startsWith("http")) return path;
     const baseUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:5000");
     return `${baseUrl}${path}`;
   };
 
@@ -179,25 +182,25 @@ export default function CommunityDetail({ communityId }: CommunityDetailProps) {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <Button
                 variant={isJoined ? "outline" : "primary"}
                 onClick={handleJoinLeave}
-                className="flex-1 md:flex-none rounded-xl h-10 sm:h-11 px-4 sm:px-8 text-sm font-bold"
+                className="flex-1 sm:flex-none rounded-xl h-10 sm:h-11 px-4 sm:px-8 text-xs sm:text-sm font-bold whitespace-nowrap"
               >
                 {isJoined ? t('communities.joined') : t('communities.joinCommunity')}
               </Button>
               {isModerator && (
                 <Button
                   variant="ghost"
-                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-10 sm:h-11"
+                  className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-10 sm:h-11 shrink-0"
                 >
                   <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </Button>
               )}
               <Button
                 variant="ghost"
-                className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-10 sm:h-11"
+                className="p-2 rounded-xl border border-gray-200 dark:border-gray-800 h-10 sm:h-11 shrink-0"
               >
                 <Share2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </Button>

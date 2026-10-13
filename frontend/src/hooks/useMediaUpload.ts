@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import api from '@/services/api';
 
 interface UploadProgress {
   loaded: number;
@@ -7,8 +8,8 @@ interface UploadProgress {
 }
 
 interface UseMediaUploadReturn {
-  uploadFile: (file: File) => Promise<string>;
-  uploadFiles: (files: File[]) => Promise<string[]>;
+  uploadFile: (file: File, folder?: string) => Promise<string>;
+  uploadFiles: (files: File[], folder?: string) => Promise<string[]>;
   progress: UploadProgress | null;
   isUploading: boolean;
   error: string | null;
@@ -19,51 +20,46 @@ export const useMediaUpload = (): UseMediaUploadReturn => {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadFile = useCallback(async (file: File): Promise<string> => {
+  const uploadFile = useCallback(async (file: File, folder: string = 'uploads'): Promise<string> => {
     setIsUploading(true);
     setError(null);
     setProgress({ loaded: 0, total: file.size, percentage: 0 });
 
     try {
-      // Simulate upload progress
-      // In a real implementation, you would use XMLHttpRequest or fetch with progress tracking
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('folder', folder);
 
-      // Simulate progress
-      for (let i = 0; i <= 100; i += 10) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        setProgress({
-          loaded: (file.size * i) / 100,
-          total: file.size,
-          percentage: i,
-        });
-      }
+      const response = await api.post('/upload', formData, {
+        onUploadProgress: (progressEvent) => {
+          const total = progressEvent.total || file.size;
+          const loaded = progressEvent.loaded;
+          const percentage = Math.round((loaded / total) * 100);
+          setProgress({ loaded, total, percentage });
+        },
+      });
 
-      // In a real implementation, you would upload to your server or cloud storage
-      // const response = await api.post('/upload', formData);
-      // return response.data.url;
-
-      // For now, return a mock URL
-      const mockUrl = URL.createObjectURL(file);
-      return mockUrl;
+      const url: string = response.data?.data?.url || response.data?.url;
+      if (!url) throw new Error('Upload succeeded but no URL was returned');
+      return url;
     } catch (err: any) {
-      setError(err.message || 'Upload failed');
-      throw err;
+      const msg = err.response?.data?.message || err.message || 'Upload failed';
+      setError(msg);
+      throw new Error(msg);
     } finally {
       setIsUploading(false);
       setProgress(null);
     }
   }, []);
 
-  const uploadFiles = useCallback(async (files: File[]): Promise<string[]> => {
+  const uploadFiles = useCallback(async (files: File[], folder: string = 'uploads'): Promise<string[]> => {
     const urls: string[] = [];
-    
+
     for (const file of files) {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, folder);
       urls.push(url);
     }
-    
+
     return urls;
   }, [uploadFile]);
 

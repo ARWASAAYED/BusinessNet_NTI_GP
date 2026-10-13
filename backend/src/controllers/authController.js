@@ -88,7 +88,8 @@ exports.signup = async (req, res) => {
     };
 
     if (req.files && req.files.length > 0) {
-      userData.avatarUrl = `/uploads/${req.files[0].filename}`;
+      const f = req.files[0];
+      userData.avatarUrl = f.path || f.url || (f.filename ? `/uploads/${f.filename}` : "");
     }
 
     const user = await User.create(userData);

@@ -1,10 +1,8 @@
 import axios from "axios";
 import { io, Socket } from "socket.io-client";
+import { API_URL, SOCKET_URL } from "@/utils/constants";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+const API_BASE_URL = API_URL;
 
 interface Message {
   _id: string;

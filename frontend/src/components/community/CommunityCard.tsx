@@ -21,7 +21,9 @@ const CommunityCard: React.FC<CommunityCardProps> = ({ community, onJoin, isMemb
   const getFullUrl = (path?: string) => {
     if (!path) return undefined;
     if (path.startsWith('http')) return path;
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
     return `${baseUrl}${path}`;
   };
 
@@ -97,9 +99,15 @@ const CommunityCard: React.FC<CommunityCardProps> = ({ community, onJoin, isMemb
               variant={isMember ? 'outline' : 'primary'}
               size="sm"
               onClick={onJoin}
-              className="w-full"
+              className={`w-full h-10 rounded-xl font-bold text-xs sm:text-sm whitespace-nowrap justify-center flex items-center ${
+                isMember
+                  ? "text-primary-600 dark:text-primary-400 border-2 border-primary-500"
+                  : "text-white bg-primary-600 hover:bg-primary-700 shadow-md shadow-primary-500/20"
+              }`}
             >
-              {isMember ? t('communities.joined') : t('communities.joinCommunity')}
+              <span className={isMember ? "text-primary-600 dark:text-primary-400 font-bold" : "text-white font-bold"}>
+                {isMember ? t('communities.joined', 'Joined') : t('communities.joinCommunity', 'Join Community')}
+              </span>
             </Button>
           )}
         </div>

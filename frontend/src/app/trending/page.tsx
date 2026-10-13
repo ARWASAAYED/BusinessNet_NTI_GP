@@ -19,6 +19,7 @@ export default function TrendingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [chartData, setChartData] = useState<TrendDataPoint[]>([]);
+  const [mobileTab, setMobileTab] = useState<'posts' | 'sidebar'>('posts');
 
   const categories = [
     { name: 'All', icon: <Globe className="w-4 h-4" /> },
@@ -37,7 +38,9 @@ export default function TrendingPage() {
           trendService.getTrendingPosts(1, 10, selectedCategory),
           trendService.getTrendingTopics(selectedCategory)
         ]);
-        const loadedTopics = topicsData || [];
+        const loadedTopics = selectedCategory && selectedCategory !== 'All'
+          ? (topicsData || []).filter(t => !t.category || t.category === 'General' || t.category.toLowerCase() === selectedCategory.toLowerCase())
+          : (topicsData || []);
         setPosts(postsData.posts || []);
         setTopics(loadedTopics);
 
@@ -70,8 +73,8 @@ export default function TrendingPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       {/* Hero Header & Chart Section */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-12">
-        <div className="xl:col-span-2 relative p-8 rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-primary-600 to-indigo-900 shadow-2xl shadow-primary-500/20 flex flex-col justify-center">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
+        <div className="xl:col-span-2 relative p-6 sm:p-8 rounded-[1.8rem] sm:rounded-[2.5rem] overflow-hidden bg-gradient-to-br from-primary-600 to-indigo-900 shadow-2xl shadow-primary-500/20 flex flex-col justify-center">
           <div className="absolute top-0 end-0 p-8 opacity-10">
             <TrendingUp className="w-64 h-64" />
           </div>
@@ -79,10 +82,10 @@ export default function TrendingPage() {
             <Badge className="mb-4 bg-white/20 backdrop-blur-md text-white border-none py-1.5 px-4 rounded-full font-black uppercase tracking-widest text-[10px]">
               {t('trending.livePulse', 'Live Pulse Analytics')}
             </Badge>
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter">
               {t('trending.whatsToday', "What's Trending Today")}
             </h1>
-            <p className="text-primary-100 text-lg max-w-2xl font-medium leading-relaxed">
+            <p className="text-primary-100 text-sm sm:text-lg max-w-2xl font-medium leading-relaxed">
               {t('trending.subtitle', 'Real-time insights into the most discussed professional topics and viral content across the MADA ecosystem.')}
             </p>
           </div>
@@ -97,12 +100,12 @@ export default function TrendingPage() {
       </div>
 
       {/* Category Filter Bar */}
-      <div className="flex items-center gap-3 mb-10 overflow-x-auto no-scrollbar pb-4 -mx-4 px-4">
+      <div className="flex items-center gap-2 sm:gap-3 mb-8 sm:mb-10 overflow-x-auto no-scrollbar pb-3 -mx-4 px-4">
         {categories.map(cat => (
           <button
             key={cat.name}
             onClick={() => setSelectedCategory(cat.name)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold transition-all whitespace-nowrap border-2 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap border-2 shrink-0 ${
               selectedCategory === cat.name 
                 ? 'bg-primary-500 text-white border-primary-500 shadow-lg shadow-primary-500/30' 
                 : 'bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-800 hover:border-primary-200 dark:hover:border-primary-900/40'
@@ -114,9 +117,35 @@ export default function TrendingPage() {
         ))}
       </div>
 
+      {/* Mobile Tab Switcher for Right Sidebar (xl:hidden) */}
+      <div className="flex xl:hidden items-center bg-gray-100 dark:bg-gray-900 p-1 rounded-2xl mb-6">
+        <button
+          onClick={() => setMobileTab('posts')}
+          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+            mobileTab === 'posts'
+              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+          }`}
+        >
+          <Flame className="w-4 h-4 text-orange-500" />
+          <span>{t('trending.viral', 'Viral Content')}</span>
+        </button>
+        <button
+          onClick={() => setMobileTab('sidebar')}
+          className={`flex-1 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+            mobileTab === 'sidebar'
+              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-sm'
+              : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
+          }`}
+        >
+          <Zap className="w-4 h-4 text-yellow-500" />
+          <span>{t('trending.marketBuzz', 'Market Buzz')} & {t('trending.risingStars', 'Rising Stars')}</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
         {/* Main Content - Trending Posts */}
-        <div className="lg:col-span-12 xl:col-span-8 space-y-8">
+        <div className={`space-y-8 ${mobileTab === 'sidebar' ? 'hidden xl:block' : 'block'} lg:col-span-12 xl:col-span-8`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-500 rounded-lg text-white shadow-lg shadow-orange-500/20">
@@ -168,8 +197,8 @@ export default function TrendingPage() {
         </div>
 
         {/* Sidebar - Trending Topics */}
-        <div className="lg:col-span-12 xl:col-span-4 space-y-8">
-          <Card className="p-8 sticky top-24 border-none shadow-2xl bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl rounded-[2rem]">
+        <div className={`space-y-8 ${mobileTab === 'posts' ? 'hidden xl:block' : 'block'} lg:col-span-12 xl:col-span-4`}>
+          <Card className="p-5 sm:p-8 sticky top-24 border-none shadow-2xl bg-white/80 dark:bg-gray-950/80 backdrop-blur-2xl rounded-[1.8rem] sm:rounded-[2rem]">
             <div className="flex items-center gap-3 mb-8">
               <div className="p-2.5 bg-yellow-500 rounded-xl text-white shadow-lg shadow-yellow-500/20">
                 <Zap className="w-5 h-5 fill-current" />
@@ -184,6 +213,10 @@ export default function TrendingPage() {
               <AnimatePresence mode="popLayout">
                 {isLoading ? (
                   <div className="py-10 flex justify-center"><Spinner size="sm" /></div>
+                ) : topics.length === 0 ? (
+                  <div className="py-8 text-center text-xs font-bold text-gray-400">
+                    {t('trending.noTrends', 'No trending topics found in this category')}
+                  </div>
                 ) : topics.map((topic, index) => (
                   <motion.div 
                     key={topic.name}
@@ -205,6 +238,11 @@ export default function TrendingPage() {
                         <span className="font-bold text-gray-900 dark:text-gray-100 group-hover:text-primary-600 transition-colors">
                           #{topic.name}
                         </span>
+                        {topic.category && topic.category !== 'General' && (
+                          <span className="text-[10px] text-gray-400 font-semibold">
+                            {topic.category}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex flex-col items-end">

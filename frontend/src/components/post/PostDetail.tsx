@@ -13,6 +13,7 @@ import { formatTimeAgo } from '@/utils/dateHelpers';
 import { useLanguage } from '@/components/layout/LanguageProvider';
 import Card from '../common/Card';
 import Button from '../common/Button';
+import { getMediaUrl } from '@/utils/mediaUrl';
 
 interface PostDetailProps {
   post: Post;
@@ -131,31 +132,63 @@ export default function PostDetail({ post }: PostDetailProps) {
           </div>
 
           {/* Media */}
-          {post.media && post.media.length > 0 && (
-            <div className="mb-6 space-y-4">
-              {post.media.map((item, index) => (
-                <div
-                  key={index}
-                  className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700"
-                >
-                  {item.type === 'video' ? (
-                    <video
-                      src={item.url}
-                      controls
-                      playsInline
-                      className="w-full max-h-[600px] object-contain bg-black"
-                    />
-                  ) : (
-                    <img
-                      src={item.url}
-                      alt={`Post media ${index + 1}`}
-                      className="w-full max-h-[600px] object-contain"
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          {(() => {
+            const rawMedia =
+              post.media && post.media.length > 0
+                ? post.media
+                : post.mediaUrl
+                  ? [post.mediaUrl]
+                  : [];
+
+            const mediaList = rawMedia
+              .map((item: any) => {
+                if (!item) return null;
+                if (typeof item === 'string') {
+                  const isVideo = /\.(mp4|webm|mov|mkv|avi|m4v|3gp|flv)$/i.test(item);
+                  return { type: isVideo ? ('video' as const) : ('image' as const), url: item };
+                }
+                const isVideo =
+                  item.type === 'video' ||
+                  /\.(mp4|webm|mov|mkv|avi|m4v|3gp|flv)$/i.test(item.url || '');
+                return {
+                  type: isVideo ? ('video' as const) : ('image' as const),
+                  url: item.url || item.path || '',
+                };
+              })
+              .filter((m): m is { type: 'video' | 'image'; url: string } => Boolean(m && m.url));
+
+            if (mediaList.length === 0) return null;
+
+            return (
+              <div className="mb-6 space-y-4">
+                {mediaList.map((item, index) => {
+                  const mediaSrc = getMediaUrl(item.url) || item.url;
+                  return (
+                    <div
+                      key={index}
+                      className="rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900"
+                    >
+                      {item.type === 'video' ? (
+                        <video
+                          src={mediaSrc}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          className="w-full max-h-[600px] object-contain bg-black"
+                        />
+                      ) : (
+                        <img
+                          src={mediaSrc}
+                          alt={`Post media ${index + 1}`}
+                          className="w-full max-h-[600px] object-contain"
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
 
           {/* Post Actions */}
           <PostActions

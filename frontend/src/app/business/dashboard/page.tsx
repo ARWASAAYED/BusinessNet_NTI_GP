@@ -86,15 +86,61 @@ export default function BusinessDashboard() {
   }
 
   if (!businessId) {
+    // Personal user: show personal analytics stub with upgrade prompt
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="max-w-md p-10 text-center space-y-6">
-          <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900/30 rounded-3xl flex items-center justify-center mx-auto text-primary-600">
-            <Target className="w-10 h-10" />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 pb-24 lg:pb-10 space-y-8">
+        {/* Personal Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-3 py-1 bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                {isRTL ? 'حساب شخصي' : 'Personal Account'}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+              {isRTL ? `مرحباً، ${user?.username} 👋` : `Hello, ${user?.username} 👋`}
+            </h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+              {isRTL ? 'ملخص نشاطك على المنصة' : 'Your activity summary on the platform'}
+            </p>
           </div>
-          <h1 className="text-2xl font-black text-gray-900 dark:text-gray-100">{t('dashboard.setupRequired')}</h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">{t('dashboard.setupDesc')}</p>
-          <Button onClick={() => window.location.href = '/business'} className="w-full rounded-2xl py-4">{t('dashboard.linkBusiness')}</Button>
+          <Button
+            onClick={() => window.location.href = '/business'}
+            className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-black shadow-lg shadow-primary-500/20 shrink-0"
+          >
+            <Target className="w-4 h-4" />
+            {isRTL ? 'ترقية لحساب أعمال' : 'Upgrade to Business'}
+          </Button>
+        </div>
+
+        {/* Personal stats cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {[
+            { label: isRTL ? 'منشوراتي' : 'My Posts', value: '—', icon: <BarChart3 className="w-5 h-5" />, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/30' },
+            { label: isRTL ? 'المتابعون' : 'Followers', value: '—', icon: <Users className="w-5 h-5" />, color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/30' },
+            { label: isRTL ? 'أكثر مشاهدة' : 'Top Post Views', value: '—', icon: <Eye className="w-5 h-5" />, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/30' },
+          ].map((stat) => (
+            <div key={stat.label} className="p-5 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-md">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${stat.color}`}>
+                {stat.icon}
+              </div>
+              <p className="text-2xl font-black text-gray-900 dark:text-gray-100">{stat.value}</p>
+              <p className="text-xs text-gray-500 font-bold mt-1 uppercase tracking-wide">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Upgrade CTA */}
+        <Card className="p-8 bg-gradient-to-br from-primary-500 to-indigo-600 border-none text-white text-center space-y-4">
+          <Target className="w-12 h-12 mx-auto opacity-90" />
+          <h2 className="text-xl font-black">{t('dashboard.setupRequired')}</h2>
+          <p className="opacity-80 text-sm max-w-sm mx-auto">{t('dashboard.setupDesc')}</p>
+          <Button
+            onClick={() => window.location.href = '/business'}
+            className="bg-white text-primary-700 hover:bg-gray-100 font-black rounded-xl px-8 py-3 mx-auto"
+          >
+            {t('dashboard.linkBusiness')}
+          </Button>
         </Card>
       </div>
     );
@@ -197,9 +243,9 @@ export default function BusinessDashboard() {
     : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 lg:pb-10">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 mb-12">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-3 py-1 bg-success-500/10 text-success-600 text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5">
@@ -210,18 +256,18 @@ export default function BusinessDashboard() {
               {t('dashboard.intel')}
             </span>
           </div>
-          <h1 className="text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('dashboard.title')}</h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">{t('dashboard.subtitle')}</p>
+          <h1 className="text-2xl sm:text-4xl font-black text-gray-900 dark:text-gray-100 tracking-tight">{t('dashboard.title')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 font-medium text-sm sm:text-base">{t('dashboard.subtitle')}</p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-5 py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl text-sm font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 transition-all">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-400 hover:bg-gray-50 transition-all">
             <Calendar className="w-4 h-4" />
             {t('dashboard.last30')}
           </button>
           <button 
             onClick={handleExport}
-            className="flex items-center gap-2 px-5 py-3 bg-primary-500 text-white rounded-2xl text-sm font-black uppercase tracking-widest hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/20"
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-primary-600 transition-all shadow-xl shadow-primary-500/20"
           >
             <Download className="w-4 h-4" />
             {t('dashboard.export')}
@@ -230,7 +276,7 @@ export default function BusinessDashboard() {
       </div>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-6 mb-8">
         <StatCard 
           title={t('dashboard.impressions')} 
           value={analytics?.totalImpressions?.toLocaleString() || 0}

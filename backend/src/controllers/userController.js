@@ -147,7 +147,10 @@ exports.updateMyProfile = async (req, res, next) => {
   try {
     // If an avatar file was uploaded via middleware, map it into the request body
     if (req.file) {
-      req.body.avatar = `/uploads/${req.file.filename}`;
+      req.body.avatar =
+        req.file.path ||
+        req.file.url ||
+        (req.file.filename ? `/uploads/${req.file.filename}` : "");
     }
 
     // Set params.id so we can reuse updateUserProfile logic and authorization checks

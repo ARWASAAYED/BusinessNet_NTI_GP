@@ -68,7 +68,7 @@ export const useMessages = (recipientId?: string) => {
             : message.senderId._id;
 
         const existingConvIndex = prev.findIndex((c) =>
-          c.participants.some((p) => p._id === otherPersonId)
+          c.participants.some((p) => p._id === otherPersonId),
         );
 
         if (existingConvIndex > -1) {
@@ -91,7 +91,7 @@ export const useMessages = (recipientId?: string) => {
         }
       });
     },
-    [recipientId, user, loadConversations]
+    [recipientId, user, loadConversations],
   );
 
   useEffect(() => {
@@ -108,17 +108,38 @@ export const useMessages = (recipientId?: string) => {
 
   useEffect(() => {
     on("message", handleNewMessage);
+    const handleUserStatus = ({
+      userId,
+      isOnline,
+    }: {
+      userId: string;
+      isOnline: boolean;
+    }) => {
+      setConversations((prev) =>
+        prev.map((conversation) => ({
+          ...conversation,
+          participants: conversation.participants.map((participant) =>
+            participant._id === userId
+              ? { ...participant, isOnline }
+              : participant,
+          ),
+        })),
+      );
+    };
+    on("user_status", handleUserStatus);
     return () => {
       off("message", handleNewMessage);
+      off("user_status", handleUserStatus);
     };
   }, [on, off, handleNewMessage]);
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, media?: File[]) => {
     if (!recipientId) return;
     try {
       const newMessage = await messageService.sendMessage({
         receiverId: recipientId,
         content,
+        media,
       });
       // The socket might emit the message back to us, or we add it manually
       // If the backend emits to sender too, we handle it in 'on'
@@ -139,8 +160,8 @@ export const useMessages = (recipientId?: string) => {
         prev.map((c) =>
           c.participants.some((p) => p._id === id)
             ? { ...c, unreadCount: 0 }
-            : c
-        )
+            : c,
+        ),
       );
     } catch (error) {
       console.error("Failed to mark as read:", error);

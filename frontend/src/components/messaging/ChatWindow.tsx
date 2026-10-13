@@ -9,6 +9,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import OnlineStatus from './OnlineStatus';
 import { useMessages } from '@/hooks/useMessages';
+import { useSocket } from '@/hooks/useSocket';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/app/providers';
 import { useLanguage } from '@/components/layout/LanguageProvider';
@@ -38,13 +39,31 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const { t, isRTL } = useLanguage();
   const { messages, sendMessage, markAsRead, isMessagesLoading, error, refreshMessages, getAiSuggestion } = useMessages(recipientId);
   const [showMenu, setShowMenu] = useState(false);
+  const [liveOnline, setLiveOnline] = useState(isOnline);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { on, off } = useSocket();
 
   useEffect(() => {
     if (recipientId) {
       markAsRead(recipientId);
     }
   }, [recipientId]);
+
+  // Sync liveOnline with prop changes
+  useEffect(() => {
+    setLiveOnline(isOnline);
+  }, [isOnline]);
+
+  // Track real-time online status via socket
+  useEffect(() => {
+    const handleUserStatus = ({ userId, isOnline: online }: { userId: string; isOnline: boolean }) => {
+      if (userId === recipientId) {
+        setLiveOnline(online);
+      }
+    };
+    on('user_status', handleUserStatus);
+    return () => off('user_status', handleUserStatus);
+  }, [on, off, recipientId]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -58,11 +77,11 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return;
+  const handleSendMessage = async (content: string, media?: File[]) => {
+    if (!content.trim() && (!media || media.length === 0)) return;
 
     try {
-      await sendMessage(content);
+      await sendMessage(content, media);
     } catch (error) {
       console.error('Failed to send message:', error);
       showToast('Failed to send message', 'error');
@@ -93,7 +112,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
           <div className="relative shrink-0">
             <Avatar src={recipientAvatar} alt={recipientName} size="md" />
-            <div className={`absolute bottom-0 end-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${isOnline ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+            <div className={`absolute bottom-0 end-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-900 ${liveOnline ? 'bg-emerald-500' : 'bg-gray-400'}`} />
           </div>
 
           <div className="min-w-0">
@@ -108,7 +127,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               )}
             </div>
             <div className="mt-0.5">
-              <OnlineStatus isOnline={isOnline} />
+              <OnlineStatus isOnline={liveOnline} />
             </div>
           </div>
         </div>

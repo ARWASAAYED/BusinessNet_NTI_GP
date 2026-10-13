@@ -6,7 +6,7 @@ const BACKEND_DISABLED = false;
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: 120000,
 });
 
 // Mock data generator for offline fallback only
@@ -93,7 +93,8 @@ const generateMockData = (url: string): any => {
 // Request interceptor
 api.interceptors.request.use(
   (config) => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const token =
+      typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -132,14 +133,20 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const url = error.config?.url || "";
-      const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/signup") || url.includes("/auth/register");
-      
+      const isAuthEndpoint =
+        url.includes("/auth/login") ||
+        url.includes("/auth/signup") ||
+        url.includes("/auth/register");
+
       // If unauthorized on a protected route, clear stale token
       if (!isAuthEndpoint) {
         if (typeof window !== "undefined") {
           localStorage.removeItem("token");
           localStorage.removeItem("currentUser");
-          if (window.location.pathname !== "/login" && window.location.pathname !== "/register") {
+          if (
+            window.location.pathname !== "/login" &&
+            window.location.pathname !== "/register"
+          ) {
             window.location.href = "/login";
           }
         }

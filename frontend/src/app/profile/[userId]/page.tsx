@@ -166,29 +166,29 @@ export default function ProfilePage() {
                 </div>
 
                 {!isOwnProfile && currentUser && (
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-3 sm:mt-0">
                     <Button
                       variant={isFollowing ? "outline" : "primary"}
                       onClick={handleFollow}
-                      className="px-6"
+                      className="px-4 sm:px-6 h-10 sm:h-11 text-xs sm:text-sm font-bold whitespace-nowrap flex-1 sm:flex-none justify-center shrink-0"
                     >
                       {isFollowing ? (t('profile.following') || "Following") : (t('profile.follow') || "Follow")}
                     </Button>
                     <Button
                       variant="primary"
                       onClick={() => setIsDuelModalOpen(true)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white border-none shadow-md shadow-primary-500/20"
+                      className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 h-10 sm:h-11 text-xs sm:text-sm font-bold bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-500 hover:to-indigo-500 text-white border-none shadow-md shadow-primary-500/20 whitespace-nowrap flex-1 sm:flex-none shrink-0"
                     >
-                      <Swords className="w-4 h-4" />
-                      {t('battles.title') || "Duel"}
+                      <Swords className="w-4 h-4 shrink-0" />
+                      <span>{t('battles.title') || "Duel"}</span>
                     </Button>
                     <Button
                       variant="outline"
                       onClick={handleMessage}
-                      className="flex items-center gap-2"
+                      className="flex items-center justify-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 h-10 sm:h-11 text-xs sm:text-sm font-bold whitespace-nowrap flex-1 sm:flex-none shrink-0"
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      {t('messages.title') || "Message"}
+                      <MessageCircle className="w-4 h-4 shrink-0" />
+                      <span>{t('messages.title') || "Message"}</span>
                     </Button>
                   </div>
                 )}
@@ -197,6 +197,7 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     onClick={() => router.push("/settings")}
+                    className="w-full sm:w-auto h-10 sm:h-11 px-6 text-xs sm:text-sm font-bold whitespace-nowrap justify-center shrink-0"
                   >
                     {t('profile.editProfile') || "Edit Profile"}
                   </Button>
@@ -323,7 +324,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Profile Navigation Tabs */}
-      <div className="flex border-b border-gray-200 dark:border-gray-800 mb-6 bg-white dark:bg-gray-900 rounded-2xl p-1.5 shadow-sm">
+      <div className="flex border-b border-gray-200 dark:border-gray-800 mb-6 bg-white dark:bg-gray-900 rounded-2xl p-1.5 shadow-sm overflow-x-auto no-scrollbar scrollbar-hide">
         {[
           { id: 'posts', label: t('profile.posts') || 'Posts', count: posts.length, icon: Grid },
           { 
@@ -337,15 +338,15 @@ export default function ProfilePage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 min-w-max shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === tab.id
                 ? 'bg-primary-50 dark:bg-primary-950/60 text-primary-600 dark:text-primary-400 shadow-sm'
                 : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-200'
             }`}
           >
-            <tab.icon className="w-4 h-4" />
+            <tab.icon className="w-4 h-4 shrink-0" />
             <span>{tab.label}</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full ${
+            <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full shrink-0 ${
               activeTab === tab.id ? 'bg-primary-200/50 dark:bg-primary-900/50' : 'bg-gray-100 dark:bg-gray-800'
             }`}>
               {tab.count}
@@ -399,7 +400,9 @@ export default function ProfilePage() {
             const getMediaUrl = (url: string) => {
               if (!url) return '';
               if (url.startsWith('http')) return url;
-              const base = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:5000';
+              const base = process.env.NEXT_PUBLIC_API_URL
+                ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '')
+                : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
               return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
             };
 
@@ -468,7 +471,11 @@ export default function ProfilePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {businesses.map((biz) => {
-                const logoUrl = biz.logo ? (biz.logo.startsWith('http') ? biz.logo : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${biz.logo}`) : '';
+                const logoUrl = biz.logo ? (
+                  biz.logo.startsWith('http')
+                    ? biz.logo
+                    : `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000')}${biz.logo}`
+                ) : '';
                 return (
                   <Card
                     key={biz._id}
@@ -514,14 +521,14 @@ export default function ProfilePage() {
             <div className="flex items-center justify-center max-h-[75vh] bg-black">
               {selectedMedia.isVideo ? (
                 <video
-                  src={selectedMedia.url.startsWith('http') ? selectedMedia.url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${selectedMedia.url}`}
+                  src={selectedMedia.url.startsWith('http') ? selectedMedia.url : `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000')}${selectedMedia.url}`}
                   controls
                   autoPlay
                   className="max-h-[75vh] w-auto max-w-full"
                 />
               ) : (
                 <img
-                  src={selectedMedia.url.startsWith('http') ? selectedMedia.url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '')}${selectedMedia.url}`}
+                  src={selectedMedia.url.startsWith('http') ? selectedMedia.url : `${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL.replace('/api/v1', '') : (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000')}${selectedMedia.url}`}
                   alt=""
                   className="max-h-[75vh] w-auto max-w-full object-contain"
                 />

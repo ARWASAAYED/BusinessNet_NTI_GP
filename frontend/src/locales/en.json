@@ -24,6 +24,7 @@
     "logout": "Logout",
     "exploreFeed": "Explore Feed",
     "live": "Live",
+    "dashboard": "Dashboard",
     "more": "More",
     "panel": "Panel",
     "banner": "Banner"
@@ -33,7 +34,8 @@
     "guestDesc": "Sign in or create an account to unlock messaging, deals, and verified business analytics.",
     "register": "Register",
     "communities": "Communities",
-    "noCommunities": "No communities yet"
+    "noCommunities": "No communities yet",
+    "followedBusinesses": "Followed Businesses"
   },
   "auth": {
     "loginTitle": "Welcome Back",
@@ -91,6 +93,8 @@
     "promoted": "Promoted",
     "category": "Category",
     "media": "Media",
+    "photo": "Photo",
+    "video": "Video",
     "tag": "Tag",
     "emoji": "Emoji",
     "clear": "Clear",
@@ -253,7 +257,7 @@
     "offeringPrice": "Price (optional)",
     "followers": "Followers",
     "noFollowers": "No followers yet. Be the first to follow!",
-    "moreFollowers": "+{count} more followers",
+    "moreFollowers": "+{{count}} more followers",
     "aboutSection": "About Section",
     "emailInquiry": "Email Inquiry",
     "directDial": "Direct Dial",
@@ -381,6 +385,26 @@
     "noAnalyticsYet": "No analytics are available for this campaign yet.",
     "closeInsight": "Close Insight"
   },
+  "trending": {
+    "title": "Trending Now",
+    "viewAll": "View All",
+    "livePulse": "Live Pulse Analytics",
+    "whatsToday": "What's Trending Today",
+    "subtitle": "Real-time insights into the most discussed professional topics and viral content across the MADA ecosystem.",
+    "globalActivity": "Global Network Activity",
+    "viral": "Viral Content",
+    "liveUpdates": "Live Updates",
+    "scraping": "Scraping Network Waves...",
+    "silence": "Silence in the Sphere",
+    "silenceDesc": "No trending posts found in this category right now. Be the first to start a conversation!",
+    "marketBuzz": "Market Buzz",
+    "hottest": "Hottest Keywords",
+    "activityIndex": "Activity Index",
+    "risingStars": "Rising Stars",
+    "risingStarsDesc": "Businesses with the highest reputation growth spikes this week across the global network.",
+    "exploreTop": "Explore Top Businesses",
+    "noTrends": "No trends in this category yet"
+  },
   "battles": {
     "title": "Industry Battles",
     "subtitle": "The arena where professional ideologies clash. Challenge industry peers, vote on arguments, and climb the reputation leaderboard.",
@@ -469,8 +493,8 @@
     "allCaughtUp": "You're all caught up!",
     "emptyDesc": "When you get notifications about your activity, they'll show up here.",
     "loading": "Loading notifications...",
-    "unread": "{count} unread notification",
-    "unreadPlural": "{count} unread notifications",
+    "unread": "{{count}} unread notification",
+    "unreadPlural": "{{count}} unread notifications",
     "viewAll": "View All Notifications",
     "latestNotification": "Latest Notification"
   },

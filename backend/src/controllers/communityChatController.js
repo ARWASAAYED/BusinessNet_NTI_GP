@@ -1,4 +1,4 @@
-const CommunityMessage = require("../models/CommunityMessage");
+const CommunityMessage = require("../models/communitymessage");
 const CommunityMember = require("../models/communityMember");
 const Community = require("../models/community");
 
@@ -22,13 +22,26 @@ exports.getCommunityMessages = async (req, res, next) => {
 
     if (!isMember) {
       // Check if user is banned
-      if (community.bannedUsers && community.bannedUsers.some(b => b.toString() === req.user._id.toString())) {
-        return res.status(403).json({ message: "You are banned from this community" });
+      if (
+        community.bannedUsers &&
+        community.bannedUsers.some(
+          (b) => b.toString() === req.user._id.toString(),
+        )
+      ) {
+        return res
+          .status(403)
+          .json({ message: "You are banned from this community" });
       }
 
       // Auto-join creator, moderator or member
-      const isCreator = community.creatorId && community.creatorId.toString() === req.user._id.toString();
-      const isMod = community.moderators && community.moderators.some(m => m.toString() === req.user._id.toString());
+      const isCreator =
+        community.creatorId &&
+        community.creatorId.toString() === req.user._id.toString();
+      const isMod =
+        community.moderators &&
+        community.moderators.some(
+          (m) => m.toString() === req.user._id.toString(),
+        );
       isMember = await CommunityMember.create({
         communityId,
         userId: req.user._id,
@@ -59,7 +72,8 @@ exports.sendCommunityMessage = async (req, res, next) => {
     // communityId comes from URL params (always reliable), fall back to body
     const communityId = req.params.communityId || req.body.communityId;
     const content = req.body.content || "";
-    const wantsAnnouncement = req.body.isAnnouncement === 'true' || req.body.isAnnouncement === true;
+    const wantsAnnouncement =
+      req.body.isAnnouncement === "true" || req.body.isAnnouncement === true;
 
     if (!communityId) {
       return res.status(400).json({ message: "Community ID is required" });
@@ -71,8 +85,15 @@ exports.sendCommunityMessage = async (req, res, next) => {
     }
 
     // Check if user is banned
-    if (community.bannedUsers && community.bannedUsers.some(b => b.toString() === req.user._id.toString())) {
-      return res.status(403).json({ message: "You are banned from this community" });
+    if (
+      community.bannedUsers &&
+      community.bannedUsers.some(
+        (b) => b.toString() === req.user._id.toString(),
+      )
+    ) {
+      return res
+        .status(403)
+        .json({ message: "You are banned from this community" });
     }
 
     // Verify or establish membership
@@ -81,8 +102,14 @@ exports.sendCommunityMessage = async (req, res, next) => {
       userId: req.user._id,
     });
 
-    const isCreator = community.creatorId && community.creatorId.toString() === req.user._id.toString();
-    const isMod = community.moderators && community.moderators.some(m => m.toString() === req.user._id.toString());
+    const isCreator =
+      community.creatorId &&
+      community.creatorId.toString() === req.user._id.toString();
+    const isMod =
+      community.moderators &&
+      community.moderators.some(
+        (m) => m.toString() === req.user._id.toString(),
+      );
 
     if (!membership) {
       membership = await CommunityMember.create({
@@ -93,15 +120,27 @@ exports.sendCommunityMessage = async (req, res, next) => {
     }
 
     // Safe announcement check: only grant announcement if admin/moderator/creator
-    const canAnnounce = membership.role === "admin" || membership.role === "moderator" || isCreator || isMod;
+    const canAnnounce =
+      membership.role === "admin" ||
+      membership.role === "moderator" ||
+      isCreator ||
+      isMod;
     const isAnnouncement = Boolean(wantsAnnouncement && canAnnounce);
 
     const media = [];
     if (req.files && req.files.length > 0) {
       req.files.forEach((file) => {
+        const isVideo =
+          (file.mimetype && file.mimetype.startsWith("video/")) ||
+          /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(
+            file.originalname || file.path || "",
+          );
         media.push({
-          type: file.mimetype.startsWith("video/") ? "video" : "image",
-          url: `/uploads/${file.filename}`,
+          type: isVideo ? "video" : "image",
+          url:
+            file.path ||
+            file.url ||
+            (file.filename ? `/uploads/${file.filename}` : ""),
         });
       });
     }
@@ -115,7 +154,7 @@ exports.sendCommunityMessage = async (req, res, next) => {
     });
 
     const populatedMessage = await CommunityMessage.findById(
-      message._id
+      message._id,
     ).populate("senderId", "username fullName avatarUrl");
 
     // Socket emission
@@ -123,7 +162,7 @@ exports.sendCommunityMessage = async (req, res, next) => {
     if (io) {
       io.to(`community_${communityId}`).emit(
         "community_message",
-        populatedMessage
+        populatedMessage,
       );
     }
 
@@ -158,7 +197,7 @@ exports.summarizeCommunity = async (req, res, next) => {
       .limit(limit);
 
     const result = await aiService.summarizeMessages(
-      messages.map((m) => ({ content: m.content }))
+      messages.map((m) => ({ content: m.content })),
     );
 
     res.json({ success: true, data: result });
@@ -177,12 +216,16 @@ exports.deleteCommunityMessage = async (req, res, next) => {
 
     // Verify permission: sender OR community moderator/admin
     const membership = await CommunityMember.findOne({ communityId, userId });
-    
+
     const isSender = message.senderId.toString() === userId.toString();
-    const isModerator = membership && (membership.role === 'admin' || membership.role === 'moderator');
+    const isModerator =
+      membership &&
+      (membership.role === "admin" || membership.role === "moderator");
 
     if (!isSender && !isModerator) {
-      return res.status(403).json({ message: "Unauthorized to delete this message" });
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to delete this message" });
     }
 
     await CommunityMessage.findByIdAndDelete(messageId);
@@ -190,7 +233,10 @@ exports.deleteCommunityMessage = async (req, res, next) => {
     // Socket emission for deletion
     const io = req.app.get("io");
     if (io) {
-      io.to(`community_${communityId}`).emit("community_message_deleted", messageId);
+      io.to(`community_${communityId}`).emit(
+        "community_message_deleted",
+        messageId,
+      );
     }
 
     res.json({ success: true, message: "Message deleted" });

@@ -1,6 +1,13 @@
 // API Constants
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
-export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+const getClientOrigin = () =>
+  typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000';
+
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  `${getClientOrigin()}/api/v1`;
+
+export const SOCKET_URL =
+  process.env.NEXT_PUBLIC_SOCKET_URL || getClientOrigin();
 
 // App Routes
 export const ROUTES = {

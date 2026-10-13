@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 export interface Post {
   _id: string;
@@ -7,7 +7,7 @@ export interface Post {
     _id: string;
     username: string;
     avatar?: string;
-    accountType?: 'personal' | 'business';
+    accountType?: "personal" | "business";
   };
   business?: {
     _id: string;
@@ -25,9 +25,10 @@ export interface Post {
   originalPost?: Post;
   content: string;
   media?: {
-    type: 'image' | 'video';
+    type: "image" | "video";
     url: string;
   }[];
+  mediaUrl?: string;
   category?: string;
   hashtags?: string[];
   mentions?: string[];
@@ -67,26 +68,55 @@ export interface UpdatePostData {
 
 const postService = {
   // Get feed posts
-  getFeed: async (page = 1, limit = 10): Promise<{ posts: Post[]; hasMore: boolean }> => {
-    const response = await api.get(`/posts/feed?page=${page}&limit=${limit}`);
+  getFeed: async (
+    page = 1,
+    limit = 10,
+    category?: string,
+    trending = false,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (category) params.set("category", category);
+    if (trending) params.set("trending", "true");
+    const response = await api.get(`/posts/feed?${params.toString()}`);
     return response.data.data;
   },
 
   // Get posts by user
-  getUserPosts: async (userId: string, page = 1, limit = 10): Promise<{ posts: Post[]; hasMore: boolean }> => {
-    const response = await api.get(`/posts/user/${userId}?page=${page}&limit=${limit}`);
+  getUserPosts: async (
+    userId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> => {
+    const response = await api.get(
+      `/posts/user/${userId}?page=${page}&limit=${limit}`,
+    );
     return response.data.data;
   },
 
   // Get posts by business
-  getBusinessPosts: async (businessId: string, page = 1, limit = 10): Promise<{ posts: Post[]; hasMore: boolean }> => {
-    const response = await api.get(`/posts/business/${businessId}?page=${page}&limit=${limit}`);
+  getBusinessPosts: async (
+    businessId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> => {
+    const response = await api.get(
+      `/posts/business/${businessId}?page=${page}&limit=${limit}`,
+    );
     return response.data.data;
   },
 
   // Get posts by community
-  getCommunityPosts: async (communityId: string, page = 1, limit = 10): Promise<{ posts: Post[]; hasMore: boolean }> => {
-    const response = await api.get(`/posts/community/${communityId}?page=${page}&limit=${limit}`);
+  getCommunityPosts: async (
+    communityId: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> => {
+    const response = await api.get(
+      `/posts/community/${communityId}?page=${page}&limit=${limit}`,
+    );
     return response.data.data;
   },
 
@@ -99,23 +129,25 @@ const postService = {
   // Create a new post
   createPost: async (data: CreatePostData): Promise<Post> => {
     const formData = new FormData();
-    
-    formData.append('content', data.content);
-    
-    if (data.category) formData.append('category', data.category);
-    if (data.businessId) formData.append('businessId', data.businessId);
-    if (data.communityId) formData.append('communityId', data.communityId);
-    if (data.hashtags) formData.append('hashtags', JSON.stringify(data.hashtags));
-    if (data.mentions) formData.append('mentions', JSON.stringify(data.mentions));
-    
+
+    formData.append("content", data.content);
+
+    if (data.category) formData.append("category", data.category);
+    if (data.businessId) formData.append("businessId", data.businessId);
+    if (data.communityId) formData.append("communityId", data.communityId);
+    if (data.hashtags)
+      formData.append("hashtags", JSON.stringify(data.hashtags));
+    if (data.mentions)
+      formData.append("mentions", JSON.stringify(data.mentions));
+
     if (data.media) {
       data.media.forEach((file) => {
-        formData.append('media', file);
+        formData.append("media", file);
       });
     }
 
-    const response = await api.post('/posts', formData);
-    
+    const response = await api.post("/posts", formData);
+
     return response.data.data;
   },
 
@@ -155,19 +187,27 @@ const postService = {
   },
 
   // Increment view count
-  incrementView: async (postId: string): Promise<{ success: boolean; views: number; uniqueViews: number }> => {
+  incrementView: async (
+    postId: string,
+  ): Promise<{ success: boolean; views: number; uniqueViews: number }> => {
     const response = await api.post(`/posts/${postId}/view`);
     return response.data;
   },
 
   // Search posts
-  searchPosts: async (query: string, page = 1, limit = 10): Promise<{ posts: Post[]; hasMore: boolean }> => {
-    const response = await api.get(`/posts/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+  searchPosts: async (
+    query: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{ posts: Post[]; hasMore: boolean }> => {
+    const response = await api.get(
+      `/posts/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`,
+    );
     return response.data.data;
   },
 
   // Vote on a post
-  votePost: async (postId: string, type: 'up' | 'down'): Promise<Post> => {
+  votePost: async (postId: string, type: "up" | "down"): Promise<Post> => {
     const response = await api.post(`/posts/${postId}/vote`, { type });
     return response.data.data;
   },

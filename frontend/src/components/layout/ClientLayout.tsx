@@ -1,13 +1,13 @@
 "use client";
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
-import Navbar from './Navbar';
-import Sidebar from './Sidebar';
-import Footer from './Footer';
-import MobileNav from './MobileNav';
-import MarketTicker from '../trend/MarketTicker';
+import React from "react";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import Navbar from "./Navbar";
+import Sidebar from "./Sidebar";
+import Footer from "./Footer";
+import MobileNav from "./MobileNav";
+import MarketTicker from "../trend/MarketTicker";
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -23,22 +23,33 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   }, []);
 
   // Auth paths get completely isolated (no navbar, no ticker, no mesh)
-  const authPaths = ['/login', '/register', '/forgot-password', '/reset-password'];
-  const isAuthPage = authPaths.some(p => (pathname || '').startsWith(p));
+  const authPaths = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
+  const isAuthPage = authPaths.some((p) => (pathname || "").startsWith(p));
 
   // Paths where Sidebar should NOT be shown
-  const noSidebarPaths = ['/', '/login', '/register', '/forgot-password', '/reset-password'];
-  const isLandingOrAuth = noSidebarPaths.includes(pathname || '');
-  const isLanding = pathname === '/';
-  
+  const noSidebarPaths = [
+    "/",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ];
+  const isLandingOrAuth = noSidebarPaths.includes(pathname || "");
+  const isLanding = pathname === "/";
+
   // Only show Sidebar for authenticated users on app routes
   const showSidebar = mounted && isAuthenticated && !isLandingOrAuth;
-  
+
   // Only show Footer on landing page
-  const showFooter = mounted && pathname === '/';
+  const showFooter = mounted && pathname === "/";
 
   // Check if current route is within messages
-  const isMessagesPage = (pathname || '').startsWith('/messages');
+  const isMessagesPage = (pathname || "").startsWith("/messages");
 
   // Auth pages: render children only — the auth layout handles the dark background
   if (isAuthPage) {
@@ -46,9 +57,11 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   }
 
   return (
-    <div className={`flex flex-col bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden ${
-        isMessagesPage ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'
-    }`}>
+    <div
+      className={`flex flex-col bg-background text-foreground transition-colors duration-300 relative overflow-x-hidden ${
+        isMessagesPage ? "h-[100dvh] overflow-hidden" : "min-h-screen"
+      }`}
+    >
       {/* Dynamic Background */}
       <div className="bg-mesh pointer-events-none">
         <div className="absolute inset-0 mesh-gradient" />
@@ -66,13 +79,17 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
           <MarketTicker />
         </div>
       )}
-      <div className={`flex-1 flex flex-col lg:flex-row relative ${
-        isMessagesPage ? 'min-h-0 overflow-hidden' : ''
-      }`}>
+      <div
+        className={`flex-1 flex flex-col lg:flex-row relative ${
+          isMessagesPage ? "min-h-0 overflow-hidden" : ""
+        }`}
+      >
         {showSidebar && <Sidebar />}
-        <main className={`flex-1 flex flex-col ${showSidebar ? 'lg:ps-0' : ''} ${
-          isMessagesPage ? 'min-h-0 overflow-hidden' : ''
-        }`}>
+        <main
+          className={`flex-1 flex flex-col ${showSidebar ? "lg:ps-0" : ""} ${
+            isMessagesPage ? "min-h-0 overflow-hidden" : ""
+          }`}
+        >
           {children}
           {/* Bottom padding on mobile for the fixed nav bar */}
           {!isLandingOrAuth && !isMessagesPage && (
@@ -81,8 +98,8 @@ const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         </main>
       </div>
       {showFooter && <Footer />}
-      {/* Mobile Bottom Navigation */}
-      {mounted && !isLandingOrAuth && <MobileNav />}
+      {/* Mobile Bottom Navigation - messages has a dedicated full-height composer */}
+      {mounted && !isLandingOrAuth && !isMessagesPage && <MobileNav />}
     </div>
   );
 };

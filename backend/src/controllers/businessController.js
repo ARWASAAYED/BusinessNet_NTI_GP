@@ -21,7 +21,7 @@ exports.searchBusinesses = async (req, res) => {
   try {
     const { q, category } = req.query;
     const query = {};
-    const cleanQ = q ? q.replace(/^#+/, '').trim() : '';
+    const cleanQ = q ? q.replace(/^#+/, "").trim() : "";
 
     if (cleanQ) {
       query.$or = [
@@ -33,7 +33,10 @@ exports.searchBusinesses = async (req, res) => {
     }
 
     if (category && category !== "All") {
-      query.$and = [{ $or: [{ industry: category }, { category }] }];
+      query.$and = [
+        ...(query.$and || []),
+        { $or: [{ industry: category }, { category }] },
+      ];
     }
 
     const businesses = await Business.find(query).limit(20);
@@ -80,19 +83,46 @@ exports.getUserBusinesses = async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
+};
+
 exports.getFollowedBusinesses = async (req, res) => {
   try {
-    const businesses = await Business.find({ followers: req.user._id })
-      .select("_id name logo avatarUrl category industry followers")
-      .sort({ createdAt: -1 });
+    const User = require("../models/user");
+    const currentUserId = req.user._id;
+
+    // 1. Direct business followers (user clicked follow on Business page)
+    const directBusinesses = await Business.find({ followers: currentUserId })
+      .select("_id name logo avatarUrl coverImage category industry followers")
+      .lean();
+
+    // 2. Businesses associated with users that the current user follows
+    const currentUser = await User.findById(currentUserId).select("following");
+    const followingUserIds = currentUser?.following || [];
+
+    let userBusinesses = [];
+    if (followingUserIds.length > 0) {
+      userBusinesses = await Business.find({
+        $or: [
+          { userId: { $in: followingUserIds } },
+          { _id: { $in: followingUserIds } },
+        ],
+      })
+        .select("_id name logo avatarUrl coverImage category industry followers")
+        .lean();
+    }
+
+    // Merge and deduplicate by _id
+    const bizMap = new Map();
+    for (const b of [...directBusinesses, ...userBusinesses]) {
+      bizMap.set(b._id.toString(), b);
+    }
+
+    const businesses = Array.from(bizMap.values());
     res.status(200).json({ success: true, data: businesses });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
-};
-
 
 exports.followBusiness = async (req, res) => {
   try {
@@ -140,81 +170,108 @@ exports.updateBusinessProfile = async (req, res) => {
 
     // Handle file uploads
     if (req.files) {
-      if (req.files['logo'] && req.files['logo'][0]) {
-        updates.logo = `/uploads/${req.files['logo'][0].filename}`;
+      if (req.files["logo"] && req.files["logo"][0]) {
+        const f = req.files["logo"][0];
+        updates.logo = f.path || f.url || (f.filename ? `/uploads/${f.filename}` : "");
       }
-      if (req.files['coverImage'] && req.files['coverImage'][0]) {
-        updates.coverImage = `/uploads/${req.files['coverImage'][0].filename}`;
+      if (req.files["coverImage"] && req.files["coverImage"][0]) {
+        const f = req.files["coverImage"][0];
+        updates.coverImage = f.path || f.url || (f.filename ? `/uploads/${f.filename}` : "");
       }
     }
 
     // Parse JSON fields if they come as strings
-    if (typeof updates.address === 'string') {
-      try { updates.address = JSON.parse(updates.address); } catch (e) {}
+    if (typeof updates.address === "string") {
+      try {
+        updates.address = JSON.parse(updates.address);
+      } catch (e) {}
     }
-    if (typeof updates.socialLinks === 'string') {
-      try { updates.socialLinks = JSON.parse(updates.socialLinks); } catch (e) {}
+    if (typeof updates.socialLinks === "string") {
+      try {
+        updates.socialLinks = JSON.parse(updates.socialLinks);
+      } catch (e) {}
     }
 
     // Dynamic keyword extraction from description
     if (updates.description) {
       // Simple extraction: split, filter common words, take top 5 unique
       const words = updates.description.split(/\s+/);
-      const stopWords = new Set(['the', 'and', 'or', 'a', 'an', 'to', 'of', 'in', 'for', 'with', 'on', 'at', 'is', 'are']);
-      const keywords = [...new Set(words
-        .map(w => w.toLowerCase().replace(/[^a-z0-9]/g, ''))
-        .filter(w => w.length > 3 && !stopWords.has(w))
-      )].slice(0, 5);
-      
+      const stopWords = new Set([
+        "the",
+        "and",
+        "or",
+        "a",
+        "an",
+        "to",
+        "of",
+        "in",
+        "for",
+        "with",
+        "on",
+        "at",
+        "is",
+        "are",
+      ]);
+      const keywords = [
+        ...new Set(
+          words
+            .map((w) => w.toLowerCase().replace(/[^a-z0-9]/g, ""))
+            .filter((w) => w.length > 3 && !stopWords.has(w)),
+        ),
+      ].slice(0, 5);
+
       // We could update keywords here if we had a field
     }
 
     // Handle Hashtags (comma separated string)
-    if (updates.hashtags && typeof updates.hashtags === 'string') {
-        const Hashtag = require("../models/hashtag");
-        const Keyword = require("../models/keyword"); // Keyword Integration
+    if (updates.hashtags && typeof updates.hashtags === "string") {
+      const Hashtag = require("../models/hashtag");
+      const Keyword = require("../models/keyword"); // Keyword Integration
 
-        const tagNames = updates.hashtags.split(',').map(t => t.trim().replace(/^#/, '').toLowerCase()).filter(t => t);
-        const uniqueTags = [...new Set(tagNames)];
-        const hashtagIds = [];
+      const tagNames = updates.hashtags
+        .split(",")
+        .map((t) => t.trim().replace(/^#/, "").toLowerCase())
+        .filter((t) => t);
+      const uniqueTags = [...new Set(tagNames)];
+      const hashtagIds = [];
 
-        for (const name of uniqueTags) {
-            // 1. Hashtag
-            let tag = await Hashtag.findOne({ name });
-            if (!tag) {
-                tag = await Hashtag.create({ name, count: 1 });
-            } else {
-                tag.count += 1; 
-                await tag.save();
-            }
-            hashtagIds.push(tag._id);
-
-            // 2. Keyword Sync
-            try {
-                let keyword = await Keyword.findOne({ word: name });
-                if (keyword) {
-                    keyword.frequency += 1;
-                    keyword.lastUpdated = Date.now();
-                    await keyword.save();
-                } else {
-                    await Keyword.create({
-                        word: name,
-                        frequency: 1,
-                        lastUpdated: Date.now()
-                    });
-                }
-            } catch (err) {
-                 console.error("Error syncing keyword in business update:", err);
-            }
+      for (const name of uniqueTags) {
+        // 1. Hashtag
+        let tag = await Hashtag.findOne({ name });
+        if (!tag) {
+          tag = await Hashtag.create({ name, count: 1 });
+        } else {
+          tag.count += 1;
+          await tag.save();
         }
-        updates.hashtags = hashtagIds;
+        hashtagIds.push(tag._id);
+
+        // 2. Keyword Sync
+        try {
+          let keyword = await Keyword.findOne({ word: name });
+          if (keyword) {
+            keyword.frequency += 1;
+            keyword.lastUpdated = Date.now();
+            await keyword.save();
+          } else {
+            await Keyword.create({
+              word: name,
+              frequency: 1,
+              lastUpdated: Date.now(),
+            });
+          }
+        } catch (err) {
+          console.error("Error syncing keyword in business update:", err);
+        }
+      }
+      updates.hashtags = hashtagIds;
     }
 
     const business = await Business.findByIdAndUpdate(req.params.id, updates, {
       new: true,
       runValidators: true,
-    }).populate('hashtags', 'name');
-    
+    }).populate("hashtags", "name");
+
     if (!business) {
       return res
         .status(404)
@@ -255,7 +312,7 @@ exports.removeOffering = async (req, res) => {
     }
 
     business.offerings = business.offerings.filter(
-      (o) => o._id.toString() !== req.params.offeringId
+      (o) => o._id.toString() !== req.params.offeringId,
     );
     await business.save();
 
@@ -278,7 +335,8 @@ exports.getAnalytics = async (req, res) => {
   try {
     const { id } = req.params; // businessId
     const business = await Business.findById(id);
-    if (!business) return res.status(404).json({ message: "Business not found" });
+    if (!business)
+      return res.status(404).json({ message: "Business not found" });
 
     // Aggregate stats from posts
     const postStats = await Post.aggregate([
@@ -292,9 +350,9 @@ exports.getAnalytics = async (req, res) => {
           totalDownvotes: { $sum: { $size: "$downvotes" } },
           totalComments: { $sum: "$commentsCount" },
           totalShares: { $sum: "$shareCount" },
-          totalPosts: { $sum: 1 }
-        }
-      }
+          totalPosts: { $sum: 1 },
+        },
+      },
     ]);
 
     // Aggregate stats from promotions
@@ -306,11 +364,11 @@ exports.getAnalytics = async (req, res) => {
           totalSpent: { $sum: "$spent" },
           totalPromoImpressions: { $sum: "$analytics.impressions" },
           totalClicks: { $sum: "$analytics.clicks" },
-          activeCampaigns: { 
-            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] } 
-          }
-        }
-      }
+          activeCampaigns: {
+            $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] },
+          },
+        },
+      },
     ]);
 
     const stats = postStats[0] || {
@@ -320,14 +378,14 @@ exports.getAnalytics = async (req, res) => {
       totalDownvotes: 0,
       totalComments: 0,
       totalShares: 0,
-      totalPosts: 0
+      totalPosts: 0,
     };
 
     const promo = promotionStats[0] || {
       totalSpent: 0,
       totalPromoImpressions: 0,
       totalClicks: 0,
-      activeCampaigns: 0
+      activeCampaigns: 0,
     };
 
     res.json({
@@ -336,8 +394,8 @@ exports.getAnalytics = async (req, res) => {
         ...stats,
         ...promo,
         reputationScore: business.reputationScore,
-        followersCount: business.followers.length
-      }
+        followersCount: business.followers.length,
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -348,13 +406,15 @@ exports.getPostPerformance = async (req, res) => {
   try {
     const { id } = req.params; // businessId
     const posts = await Post.find({ businessId: id })
-      .select("content impressions uniqueViews upvotesCount commentsCount shareCount createdAt isTrending")
+      .select(
+        "content impressions uniqueViews upvotesCount commentsCount shareCount createdAt isTrending",
+      )
       .sort({ impressions: -1 })
       .limit(10);
 
     res.json({
       success: true,
-      data: posts
+      data: posts,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

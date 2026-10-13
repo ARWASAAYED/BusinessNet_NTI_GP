@@ -9,6 +9,7 @@ const userController = require("../controllers/userController");
 const businessController = require("../controllers/businessController");
 const notificationController = require("../controllers/notificationController");
 const promotionController = require("../controllers/promotionController");
+const mediaController = require("../controllers/mediaController");
 const trendController = require("../controllers/trendController");
 const badgeController = require("../controllers/badgeController");
 const aiController = require("../controllers/aiController");
@@ -22,6 +23,12 @@ const {
   uploadFields,
 } = require("../middleware/fileUploadMiddleware");
 
+// Media Routes
+router.get("/media/:id", mediaController.getMedia);
+router.get("/media/:id/metadata", mediaController.getMediaMetadata);
+router.post("/upload", optionalAuth, uploadSingle("file"), mediaController.uploadMedia);
+router.post("/media/upload", optionalAuth, uploadSingle("file"), mediaController.uploadMedia);
+
 // Auth Routes
 router.post("/auth/register", uploadArray("avatar", 1), signup);
 router.post("/auth/login", login);
@@ -32,7 +39,7 @@ router.put(
   "/users/me",
   auth,
   uploadSingle("avatar"),
-  userController.updateMyProfile
+  userController.updateMyProfile,
 );
 
 router.post("/comments", optionalAuth, commentController.createComment);
@@ -47,19 +54,24 @@ router.delete("/comments/:id/like", auth, commentController.unlikeComment);
 router.get("/comments/:id/replies", commentController.getReplies);
 
 // Post Routes
-router.post("/posts", optionalAuth, uploadArray("media", 5), postController.createPost);
+router.post(
+  "/posts",
+  optionalAuth,
+  uploadArray("media", 5),
+  postController.createPost,
+);
 router.get("/posts/search", optionalAuth, postController.searchPosts);
 router.get("/posts/feed", optionalAuth, postController.getPosts);
 router.get("/posts/user/:userId", auth, userController.getUserPosts);
 router.get(
   "/posts/business/:businessId",
   auth,
-  postController.getPostsByBusiness
+  postController.getPostsByBusiness,
 );
 router.get(
   "/posts/community/:communityId",
   auth,
-  postController.getPostsByCommunity
+  postController.getPostsByCommunity,
 );
 router.post("/posts/:id/upvote", auth, postController.upvotePost);
 router.post("/posts/:id/downvote", auth, postController.downvotePost);
@@ -72,7 +84,11 @@ router.post("/posts/:id/view", optionalAuth, postController.incrementView);
 router.get("/posts/:id", optionalAuth, postController.getPostById);
 router.put("/posts/:id", auth, postController.updatePost);
 router.delete("/posts/:id", auth, postController.deletePost);
-router.post("/posts/:postId/comments", optionalAuth, commentController.createComment);
+router.post(
+  "/posts/:postId/comments",
+  optionalAuth,
+  commentController.createComment,
+);
 
 // User Routes
 router.get("/users/search", optionalAuth, userController.searchUsers);
@@ -92,20 +108,32 @@ router.get("/trends/topics", trendController.getTrendingTopics);
 router.get("/trends/posts", trendController.getTrendingPosts);
 
 // Business Routes
-router.get("/businesses/search", optionalAuth, businessController.searchBusinesses);
+router.get(
+  "/businesses/search",
+  optionalAuth,
+  businessController.searchBusinesses,
+);
 router.get(
   "/businesses/category/:category",
   optionalAuth,
-  businessController.getBusinessesByCategory
+  businessController.getBusinessesByCategory,
 );
 router.get(
   "/businesses/user/:userId",
   auth,
-  businessController.getUserBusinesses
+  businessController.getUserBusinesses,
+);
+router.get(
+  "/businesses/followed",
+  auth,
+  businessController.getFollowedBusinesses,
 );
 router.get("/businesses", optionalAuth, businessController.getAllBusinesses);
-router.get("/businesses/followed", auth, businessController.getFollowedBusinesses);
-router.get("/businesses/:id", optionalAuth, businessController.getBusinessProfile);
+router.get(
+  "/businesses/:id",
+  optionalAuth,
+  businessController.getBusinessProfile,
+);
 // Update business profile with proper middleware for fields
 router.put(
   "/businesses/:id",
@@ -114,19 +142,31 @@ router.put(
     { name: "logo", maxCount: 1 },
     { name: "coverImage", maxCount: 1 },
   ]),
-  businessController.updateBusinessProfile
+  businessController.updateBusinessProfile,
 );
 router.post("/businesses/:id/follow", auth, businessController.followBusiness);
-router.delete("/businesses/:id/follow", auth, businessController.unfollowBusiness);
-router.post("/businesses/:id/unfollow", auth, businessController.unfollowBusiness);
+router.delete(
+  "/businesses/:id/follow",
+  auth,
+  businessController.unfollowBusiness,
+);
+router.post(
+  "/businesses/:id/unfollow",
+  auth,
+  businessController.unfollowBusiness,
+);
 router.post("/businesses/:id/offerings", auth, businessController.addOffering);
 router.delete(
   "/businesses/:id/offerings/:offeringId",
   auth,
-  businessController.removeOffering
+  businessController.removeOffering,
 );
 router.get("/businesses/:id/analytics", auth, businessController.getAnalytics);
-router.get("/businesses/:id/performance", auth, businessController.getPostPerformance);
+router.get(
+  "/businesses/:id/performance",
+  auth,
+  businessController.getPostPerformance,
+);
 
 // Notification Routes
 router.get("/notifications", auth, notificationController.getNotifications);
@@ -134,26 +174,30 @@ router.put("/notifications/:id/read", auth, notificationController.markAsRead);
 router.put(
   "/notifications/read-all",
   auth,
-  notificationController.markAllAsRead
+  notificationController.markAllAsRead,
 );
 router.get(
   "/notifications/unread/count",
   auth,
-  notificationController.getUnreadCount
+  notificationController.getUnreadCount,
 );
 
 // Community Routes
 const communityController = require("../controllers/communityController");
-router.get("/communities/search", optionalAuth, communityController.searchCommunities);
+router.get(
+  "/communities/search",
+  optionalAuth,
+  communityController.searchCommunities,
+);
 router.get(
   "/communities/category/:category",
   optionalAuth,
-  communityController.getCommunitiesByCategory
+  communityController.getCommunitiesByCategory,
 );
 router.get(
   "/communities/user/:userId",
   auth,
-  communityController.getUserCommunities
+  communityController.getUserCommunities,
 );
 router.get("/communities", optionalAuth, communityController.getCommunities);
 router.get("/communities/:id", optionalAuth, communityController.getCommunity);
@@ -161,52 +205,68 @@ router.post(
   "/communities",
   auth,
   uploadArray("coverImage", 1),
-  communityController.createCommunity
+  communityController.createCommunity,
 );
 router.put(
   "/communities/:id",
   auth,
   uploadArray("coverImage", 1),
-  communityController.updateCommunity
+  communityController.updateCommunity,
 );
 router.post("/communities/:id/join", auth, communityController.joinCommunity);
 router.delete(
   "/communities/:id/leave",
   auth,
-  communityController.leaveCommunity
+  communityController.leaveCommunity,
 );
 router.get("/communities/:id/members", auth, communityController.getMembers);
-router.put("/communities/:id/members/:userId/role", auth, communityController.updateMemberRole);
-router.delete("/communities/:id/members/:userId", auth, communityController.banMember);
-router.post("/communities/:id/members/:userId/unban", auth, communityController.unbanMember);
+router.put(
+  "/communities/:id/members/:userId/role",
+  auth,
+  communityController.updateMemberRole,
+);
+router.delete(
+  "/communities/:id/members/:userId",
+  auth,
+  communityController.banMember,
+);
+router.post(
+  "/communities/:id/members/:userId/unban",
+  auth,
+  communityController.unbanMember,
+);
 
 // Community Chat Routes
 const communityChatController = require("../controllers/communityChatController");
 router.get(
   "/communities/:communityId/messages",
   auth,
-  communityChatController.getCommunityMessages
+  communityChatController.getCommunityMessages,
 );
 router.post(
   "/communities/:communityId/messages",
   auth,
   uploadArray("media", 5),
-  communityChatController.sendCommunityMessage
+  communityChatController.sendCommunityMessage,
 );
-router.delete("/communities/:communityId/messages/:messageId", auth, communityChatController.deleteCommunityMessage);
+router.delete(
+  "/communities/:communityId/messages/:messageId",
+  auth,
+  communityChatController.deleteCommunityMessage,
+);
 
 // AI helpers for communities
 router.post(
   "/communities/:communityId/ai-summarize",
   auth,
-  communityChatController.summarizeCommunity
+  communityChatController.summarizeCommunity,
 );
 
 const analyticsController = require("../controllers/analyticsController");
 router.get(
   "/analytics/business/:businessId",
   auth,
-  analyticsController.getBusinessHealth
+  analyticsController.getBusinessHealth,
 );
 
 // Chat Routes
@@ -219,7 +279,7 @@ router.post("/messages", auth, chatController.sendMessage);
 router.post(
   "/messages/:friendId/ai-reply",
   auth,
-  chatController.generateAiReply
+  chatController.generateAiReply,
 );
 router.put("/messages/:friendId/read", auth, chatController.markAsRead);
 router.delete("/messages/:messageId", auth, chatController.deleteMessage);
@@ -231,19 +291,31 @@ router.get("/promotions/:id", auth, promotionController.getPromotionById);
 router.get(
   "/promotions/:id/analytics",
   auth,
-  promotionController.getPromotionAnalytics
+  promotionController.getPromotionAnalytics,
 );
 router.patch("/promotions/:id/pause", auth, promotionController.pausePromotion);
 router.patch(
   "/promotions/:id/resume",
   auth,
-  promotionController.resumePromotion
+  promotionController.resumePromotion,
 );
 
 // Trend Promotion Routes
-router.post("/promotions/trends", auth, promotionController.createTrendPromotion);
-router.get("/promotions/trends/active", auth, promotionController.getActiveTrendPromotions);
-router.patch("/promotions/trends/:id/stop", auth, promotionController.stopTrendPromotion);
+router.post(
+  "/promotions/trends",
+  auth,
+  promotionController.createTrendPromotion,
+);
+router.get(
+  "/promotions/trends/active",
+  auth,
+  promotionController.getActiveTrendPromotions,
+);
+router.patch(
+  "/promotions/trends/:id/stop",
+  auth,
+  promotionController.stopTrendPromotion,
+);
 
 // Badge Routes
 router.get("/badges", auth, badgeController.getAllBadges);
@@ -262,7 +334,11 @@ router.put("/categories/:id", auth, categoryController.updateCategory);
 router.delete("/categories/:id", auth, categoryController.deleteCategory);
 
 // Payment Routes
-router.post("/payments/create-intent", auth, paymentController.initializePayment);
+router.post(
+  "/payments/create-intent",
+  auth,
+  paymentController.initializePayment,
+);
 router.post("/payments/webhook", paymentController.handleWebhook);
 
 // Keyword Routes
@@ -278,7 +354,7 @@ router.post(
   "/duels/:id/accept",
   auth,
   uploadArray("media", 5),
-  duelController.acceptDuel
+  duelController.acceptDuel,
 );
 router.post("/duels/:id/vote", auth, duelController.voteInDuel);
 router.post("/duels/:id/finalize", auth, duelController.finalizeDuel);

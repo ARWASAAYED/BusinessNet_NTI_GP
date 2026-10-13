@@ -1,20 +1,36 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowBigUp, ArrowBigDown, MessageCircle, Share2, MoreHorizontal, Trash2, Edit, ExternalLink, Eye, Copy, Repeat, Users, Lock, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import postService, { Post } from '@/services/postService';
-import { formatTimeAgo } from '@/utils/dateHelpers';
-import Avatar from '../common/Avatar';
-import Dropdown from '../common/Dropdown';
-import CommentList from '../comment/CommentList';
-import { useAuth } from '@/hooks/useAuth';
-import Badge from '../common/Badge';
-import { useRouter } from 'next/navigation';
-import PostEditModal from './PostEditModal';
-import { useToast } from '@/app/providers';
-import { useLanguage } from '@/components/layout/LanguageProvider';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import {
+  ArrowBigUp,
+  ArrowBigDown,
+  MessageCircle,
+  Share2,
+  MoreHorizontal,
+  Trash2,
+  Edit,
+  ExternalLink,
+  Eye,
+  Copy,
+  Repeat,
+  Users,
+  Lock,
+  X,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import postService, { Post } from "@/services/postService";
+import { formatTimeAgo } from "@/utils/dateHelpers";
+import Avatar from "../common/Avatar";
+import Dropdown from "../common/Dropdown";
+import CommentList from "../comment/CommentList";
+import { useAuth } from "@/hooks/useAuth";
+import Badge from "../common/Badge";
+import { useRouter } from "next/navigation";
+import PostEditModal from "./PostEditModal";
+import { useToast } from "@/app/providers";
+import { useLanguage } from "@/components/layout/LanguageProvider";
+import { getMediaUrl } from "@/utils/mediaUrl";
 
 interface PostCardProps {
   post: Post;
@@ -27,8 +43,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
   const { showToast } = useToast();
   const { t, locale, isRTL } = useLanguage();
   const router = useRouter();
-  const userId = user?._id || user?.id || '';
-  
+  const userId = user?._id || user?.id || "";
+
   const [upvotes, setUpvotes] = useState(post.upvotes || []);
   const [downvotes, setDownvotes] = useState(post.downvotes || []);
   const [shareCount, setShareCount] = useState(post.shareCount || 0);
@@ -38,14 +54,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
   const [hasTrackedView, setHasTrackedView] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [quoteContent, setQuoteContent] = useState('');
+  const [quoteContent, setQuoteContent] = useState("");
   const [isReposting, setIsReposting] = useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
   const upvoteList = Array.isArray(upvotes) ? upvotes : [];
   const downvoteList = Array.isArray(downvotes) ? downvotes : [];
-  
-  const userVote = upvoteList.includes(userId) ? 'up' : downvoteList.includes(userId) ? 'down' : null;
+
+  const userVote = upvoteList.includes(userId)
+    ? "up"
+    : downvoteList.includes(userId)
+      ? "down"
+      : null;
   const score = upvoteList.length - downvoteList.length;
 
   // Track view when post is visible in viewport
@@ -63,13 +83,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
               setUniqueViewCount(result.uniqueViews);
               setHasTrackedView(true);
             } catch (error) {
-              console.error('Failed to track view:', error);
+              console.error("Failed to track view:", error);
             }
           };
           trackView();
         }
       },
-      { threshold: 0.5 } // Post must be at least 50% visible
+      { threshold: 0.5 }, // Post must be at least 50% visible
     );
 
     observer.observe(postElement);
@@ -79,28 +99,23 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
     };
   }, [post._id, hasTrackedView]);
 
-  const getFullUrl = (path?: string) => {
-    if (!path) return undefined;
-    if (path.startsWith('http')) return path;
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
-    return `${baseUrl}${path}`;
-  };
+  const getFullUrl = (path?: string) => getMediaUrl(path);
 
-  const handleVote = async (type: 'up' | 'down') => {
+  const handleVote = async (type: "up" | "down") => {
     if (!user) {
-      showToast(t('feed.signInToVote'), 'info');
-      router.push('/login');
+      showToast(t("feed.signInToVote"), "info");
+      router.push("/login");
       return;
     }
     try {
       const updatedPost = await postService.votePost(post._id, type);
       setUpvotes(updatedPost.upvotes || []);
       setDownvotes(updatedPost.downvotes || []);
-      if (type === 'up' && onLike) {
+      if (type === "up" && onLike) {
         onLike(post._id);
       }
     } catch (error) {
-      console.error('Failed to vote:', error);
+      console.error("Failed to vote:", error);
     }
   };
 
@@ -110,18 +125,21 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
 
   const handleInstantRepost = async () => {
     if (!user) {
-      showToast(t('feed.signInToRepost'), 'info');
-      router.push('/login');
+      showToast(t("feed.signInToRepost"), "info");
+      router.push("/login");
       return;
     }
     setIsReposting(true);
     try {
       await postService.repostPost(post._id);
       setShareCount((prev) => prev + 1);
-      showToast(t('feed.reposted'), 'success');
+      showToast(t("feed.reposted"), "success");
       setIsShareModalOpen(false);
     } catch (error: any) {
-      showToast(error.response?.data?.message || t('feed.repostFailed'), 'error');
+      showToast(
+        error.response?.data?.message || t("feed.repostFailed"),
+        "error",
+      );
     } finally {
       setIsReposting(false);
     }
@@ -129,8 +147,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
 
   const handleQuoteRepost = async () => {
     if (!user) {
-      showToast(t('feed.signInToRepost'), 'info');
-      router.push('/login');
+      showToast(t("feed.signInToRepost"), "info");
+      router.push("/login");
       return;
     }
     if (!quoteContent.trim()) return;
@@ -138,11 +156,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
     try {
       await postService.repostPost(post._id, quoteContent.trim());
       setShareCount((prev) => prev + 1);
-      showToast(t('feed.quoted'), 'success');
-      setQuoteContent('');
+      showToast(t("feed.quoted"), "success");
+      setQuoteContent("");
       setIsShareModalOpen(false);
     } catch (error: any) {
-      showToast(error.response?.data?.message || t('feed.repostFailed'), 'error');
+      showToast(
+        error.response?.data?.message || t("feed.repostFailed"),
+        "error",
+      );
     } finally {
       setIsReposting(false);
     }
@@ -152,20 +173,20 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
     try {
       await postService.deletePost(post._id);
       onDelete?.(post._id);
-      showToast(t('feed.deleted'), 'success');
+      showToast(t("feed.deleted"), "success");
     } catch (error) {
-      console.error('Failed to delete post:', error);
-      showToast(t('feed.deleteFailed'), 'error');
+      console.error("Failed to delete post:", error);
+      showToast(t("feed.deleteFailed"), "error");
     }
   };
 
   const handleUpdate = async (content: string, category: string) => {
     try {
       await postService.updatePost(post._id, { content, category });
-      showToast(t('feed.updated'), 'success');
+      showToast(t("feed.updated"), "success");
     } catch (error) {
-      console.error('Failed to update post:', error);
-      showToast(t('feed.updateFailed'), 'error');
+      console.error("Failed to update post:", error);
+      showToast(t("feed.updateFailed"), "error");
       throw error;
     }
   };
@@ -173,7 +194,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
   const handleCopyPost = () => {
     const postUrl = `${window.location.origin}/feed?post=${post._id}`;
     navigator.clipboard.writeText(postUrl);
-    showToast(t('feed.linkCopied'), 'success');
+    showToast(t("feed.linkCopied"), "success");
   };
 
   const handleUserClick = () => {
@@ -187,24 +208,24 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
 
   const dropdownItems = [
     {
-      label: t('feed.shareRepost'),
+      label: t("feed.shareRepost"),
       onClick: handleShare,
       icon: <Share2 className="w-4 h-4" />,
     },
     {
-      label: t('feed.copyLink'),
+      label: t("feed.copyLink"),
       onClick: handleCopyPost,
       icon: <Copy className="w-4 h-4" />,
     },
     ...(isOwner
       ? [
           {
-            label: t('feed.editPost'),
+            label: t("feed.editPost"),
             onClick: () => setIsEditModalOpen(true),
             icon: <Edit className="w-4 h-4" />,
           },
           {
-            label: t('feed.deletePost'),
+            label: t("feed.deletePost"),
             onClick: handleDelete,
             icon: <Trash2 className="w-4 h-4" />,
             danger: true,
@@ -227,7 +248,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
       {post.isRepost && (
         <div className="flex items-center gap-2 px-6 pt-3 pb-2 text-xs font-bold text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-800/60 bg-gray-50/50 dark:bg-gray-900/30">
           <Repeat className="w-3.5 h-3.5 text-primary-500" />
-          <span>{t('feed.repostedBy')} <strong className="text-gray-900 dark:text-gray-100">{post.author?.username || 'Member'}</strong></span>
+          <span>
+            {t("feed.repostedBy")}{" "}
+            <strong className="text-gray-900 dark:text-gray-100">
+              {post.author?.username || "Member"}
+            </strong>
+          </span>
         </div>
       )}
 
@@ -235,20 +261,24 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div 
-              className="relative cursor-pointer hover:opacity-80 transition-opacity" 
+            <div
+              className="relative cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleUserClick}
               role="button"
               tabIndex={0}
             >
-              <Avatar src={post.author?.avatar} alt={post.author?.username || 'User'} size="md" />
+              <Avatar
+                src={post.author?.avatar}
+                alt={post.author?.username || "User"}
+                size="md"
+              />
               {post.isPromoted && (
                 <div className="absolute -bottom-1 -end-1 bg-primary-500 text-white rounded-full p-0.5 shadow-lg">
                   <ExternalLink className="w-2.5 h-2.5" />
                 </div>
               )}
             </div>
-            <div 
+            <div
               className="cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleUserClick}
               role="button"
@@ -256,13 +286,19 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
             >
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-gray-900 dark:text-gray-100 hover:text-primary-600 transition-colors">
-                  {post.author?.username || 'Anonymous'}
+                  {post.author?.username || "Anonymous"}
                 </h3>
-                {post.author?.accountType === 'business' && (
-                  <Badge variant="primary" size="sm" className="text-[10px] uppercase tracking-tighter py-0">Pro</Badge>
+                {post.author?.accountType === "business" && (
+                  <Badge
+                    variant="primary"
+                    size="sm"
+                    className="text-[10px] uppercase tracking-tighter py-0"
+                  >
+                    Pro
+                  </Badge>
                 )}
                 {post.community && (
-                  <Link 
+                  <Link
                     href={`/communities/${post.community._id}`}
                     onClick={(e) => e.stopPropagation()}
                     className="inline-flex items-center gap-1 text-[11px] font-bold text-primary-600 dark:text-primary-400 hover:underline bg-primary-50 dark:bg-primary-950/70 border border-primary-200/80 dark:border-primary-800/80 px-2 py-0.5 rounded-full transition-all"
@@ -270,12 +306,17 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                     <Users className="w-3 h-3" />
                     <span>c/{post.community.name}</span>
                     {post.community.isPrivate ? (
-                      <span className="flex items-center gap-0.5 text-[9px] text-amber-600 dark:text-amber-400" title="Private Community Post (Visible to members only)">
+                      <span
+                        className="flex items-center gap-0.5 text-[9px] text-amber-600 dark:text-amber-400"
+                        title="Private Community Post (Visible to members only)"
+                      >
                         <Lock className="w-2.5 h-2.5" />
-                        <span>{t('feed.private')}</span>
+                        <span>{t("feed.private")}</span>
                       </span>
                     ) : (
-                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400">{t('feed.public')}</span>
+                      <span className="text-[9px] text-emerald-600 dark:text-emerald-400">
+                        {t("feed.public")}
+                      </span>
                     )}
                   </Link>
                 )}
@@ -293,8 +334,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-          {post.isPromoted && (
-              <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded">{t('feed.promoted')}</span>
+            {post.isPromoted && (
+              <span className="text-[10px] font-black text-primary-500 uppercase tracking-widest bg-primary-50 dark:bg-primary-900/30 px-2 py-1 rounded">
+                {t("feed.promoted")}
+              </span>
             )}
             <Dropdown
               align="end"
@@ -313,10 +356,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
           <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap font-medium leading-relaxed text-[15px]">
             {(() => {
               if (!post.content) return null;
-              const hashtagRegex = /(#[a-zA-Z0-9_\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+)/g;
+              const hashtagRegex =
+                /(#[a-zA-Z0-9_\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]+)/g;
               const parts = post.content.split(hashtagRegex);
               return parts.map((part, index) => {
-                if (part.startsWith('#')) {
+                if (part.startsWith("#")) {
                   return (
                     <Link
                       key={index}
@@ -338,10 +382,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
         {post.originalPost && (
           <div className="mb-4 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/50 hover:bg-gray-100/50 dark:hover:bg-gray-900/80 transition-colors">
             <div className="flex items-center gap-2 mb-2">
-              <Avatar src={post.originalPost.author?.avatar} alt={post.originalPost.author?.username || 'User'} size="sm" />
+              <Avatar
+                src={post.originalPost.author?.avatar}
+                alt={post.originalPost.author?.username || "User"}
+                size="sm"
+              />
               <div>
                 <span className="text-xs font-bold text-gray-900 dark:text-gray-100">
-                  {post.originalPost.author?.username || 'User'}
+                  {post.originalPost.author?.username || "User"}
                 </span>
                 <span className="text-[10px] text-gray-400 ms-2">
                   {formatTimeAgo(post.originalPost.createdAt, locale)}
@@ -358,9 +406,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
             </p>
             {post.originalPost.media && post.originalPost.media.length > 0 && (
               <div className="mt-2 rounded-xl overflow-hidden max-h-48">
-                <img 
-                  src={getFullUrl(post.originalPost.media[0].url)} 
-                  alt="" 
+                <img
+                  src={getFullUrl(post.originalPost.media[0].url)}
+                  alt=""
                   className="w-full h-full object-cover max-h-48"
                 />
               </div>
@@ -369,34 +417,87 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
         )}
 
         {/* Media Grid */}
-        {post.media && post.media.length > 0 && (
-          <div className={`mb-4 grid gap-3 rounded-2xl overflow-hidden ${
-            post.media.length === 1 ? 'grid-cols-1' : 
-            post.media.length === 2 ? 'grid-cols-2' : 
-            'grid-cols-2'
-          }`}>
-            {post.media.map((item, index) => (
-              <div key={index} className={`relative group/media overflow-hidden bg-gray-100 dark:bg-gray-900 ${
-                post.media && post.media.length === 3 && index === 0 ? 'row-span-2' : ''
-              }`}>
-                {item.type === 'video' ? (
-                  <video 
-                    src={getFullUrl(item.url)} 
-                    controls 
-                    className="w-full h-full object-cover max-h-[500px]"
-                  />
-                ) : (
-                  <img
-                    src={getFullUrl(item.url)}
-                    alt=""
-                    className="w-full h-full object-cover max-h-[500px] hover:scale-105 transition-transform duration-700"
-                  />
-                )}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/media:opacity-100 transition-opacity pointer-events-none" />
-              </div>
-            ))}
-          </div>
-        )}
+        {(() => {
+          const rawMedia =
+            post.media && post.media.length > 0
+              ? post.media
+              : post.mediaUrl
+                ? [post.mediaUrl]
+                : [];
+
+          const mediaList = rawMedia
+            .map((item: any) => {
+              if (!item) return null;
+              if (typeof item === "string") {
+                const isVideo = /\.(mp4|webm|mov|mkv|avi|m4v|3gp|flv)$/i.test(item);
+                return { type: isVideo ? ("video" as const) : ("image" as const), url: item };
+              }
+              const isVideo =
+                item.type === "video" ||
+                /\.(mp4|webm|mov|mkv|avi|m4v|3gp|flv)$/i.test(item.url || "");
+              return {
+                type: isVideo ? ("video" as const) : ("image" as const),
+                url: item.url || item.path || "",
+              };
+            })
+            .filter((m): m is { type: "video" | "image"; url: string } => Boolean(m && m.url));
+
+          if (mediaList.length === 0) return null;
+
+          return (
+            <div
+              className={`mb-4 grid gap-3 rounded-2xl overflow-hidden ${
+                mediaList.length === 1
+                  ? "grid-cols-1"
+                  : mediaList.length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-2"
+              }`}
+            >
+              {mediaList.map((item, index) => {
+                const mediaSrc = getFullUrl(item.url) || item.url;
+                const isSingle = mediaList.length === 1;
+
+                return (
+                  <div
+                    key={index}
+                    className={`relative group/media overflow-hidden rounded-2xl bg-gray-950/5 dark:bg-gray-900/60 ${
+                      mediaList.length === 3 && index === 0
+                        ? "row-span-2"
+                        : ""
+                    }`}
+                  >
+                    {item.type === "video" ? (
+                      <video
+                        src={mediaSrc}
+                        controls
+                        playsInline
+                        preload="metadata"
+                        className={`w-full ${
+                          isSingle
+                            ? "max-h-[520px] object-contain bg-black rounded-2xl"
+                            : "h-full min-h-[220px] max-h-[400px] object-cover"
+                        }`}
+                      />
+                    ) : (
+                      <img
+                        src={mediaSrc}
+                        alt=""
+                        loading="lazy"
+                        className={`w-full ${
+                          isSingle
+                            ? "max-h-[520px] object-contain rounded-2xl"
+                            : "h-full min-h-[220px] max-h-[400px] object-cover hover:scale-105 transition-transform duration-500"
+                        }`}
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/media:opacity-100 transition-opacity pointer-events-none rounded-2xl" />
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
 
         {/* Actions Bar */}
         <div className="flex items-center gap-2 sm:gap-4 pt-4 border-t border-gray-100 dark:border-white/5">
@@ -405,72 +506,89 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
             <div className="flex items-center gap-1">
               <motion.button
                 whileTap={{ scale: 0.8 }}
-                onClick={() => handleVote('up')}
+                onClick={() => handleVote("up")}
                 className={`p-2 rounded-xl transition-all ${
-                  userVote === 'up' 
-                    ? 'bg-primary-500 text-white shadow-lg shadow-primary-500/40' 
-                    : 'text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  userVote === "up"
+                    ? "bg-primary-500 text-white shadow-lg shadow-primary-500/40"
+                    : "text-gray-400 hover:text-primary-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
-                <ArrowBigUp className={`w-6 h-6 ${userVote === 'up' ? 'fill-current' : ''}`} />
+                <ArrowBigUp
+                  className={`w-6 h-6 ${userVote === "up" ? "fill-current" : ""}`}
+                />
               </motion.button>
-              <span className={`text-sm font-black pe-2 ${
-                userVote === 'up' ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-300'
-              }`}>
+              <span
+                className={`text-sm font-black pe-2 ${
+                  userVote === "up"
+                    ? "text-primary-600 dark:text-primary-400"
+                    : "text-gray-600 dark:text-gray-300"
+                }`}
+              >
                 {upvoteList.length > 0 && `+${upvoteList.length}`}
               </span>
             </div>
 
             <div className="w-[1px] h-6 bg-gray-200 dark:border-gray-800 mx-1" />
-            
+
             <div className="flex items-center gap-1">
               <motion.button
                 whileTap={{ scale: 0.8 }}
-                onClick={() => handleVote('down')}
+                onClick={() => handleVote("down")}
                 className={`p-2 rounded-xl transition-all ${
-                  userVote === 'down' 
-                    ? 'bg-secondary-500 text-white shadow-lg shadow-secondary-500/40' 
-                    : 'text-gray-400 hover:text-secondary-500 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  userVote === "down"
+                    ? "bg-secondary-500 text-white shadow-lg shadow-secondary-500/40"
+                    : "text-gray-400 hover:text-secondary-500 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
-                <ArrowBigDown className={`w-6 h-6 ${userVote === 'down' ? 'fill-current' : ''}`} />
+                <ArrowBigDown
+                  className={`w-6 h-6 ${userVote === "down" ? "fill-current" : ""}`}
+                />
               </motion.button>
-              <span className={`text-sm font-black pe-2 ${
-                userVote === 'down' ? 'text-secondary-600 dark:text-secondary-400' : 'text-gray-600 dark:text-gray-300'
-              }`}>
+              <span
+                className={`text-sm font-black pe-2 ${
+                  userVote === "down"
+                    ? "text-secondary-600 dark:text-secondary-400"
+                    : "text-gray-600 dark:text-gray-300"
+                }`}
+              >
                 {downvoteList.length > 0 && `-${downvoteList.length}`}
               </span>
             </div>
           </div>
 
           {/* Comment & Share Buttons */}
-          <button 
+          <button
             onClick={() => {
               setShowComments(!showComments);
             }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl transition-all font-bold text-sm ${
-              showComments 
-                ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border border-primary-500/20' 
-                : 'bg-transparent text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'
+              showComments
+                ? "bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 border border-primary-500/20"
+                : "bg-transparent text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
             }`}
           >
             <MessageCircle className="w-5 h-5" />
             <span>{post.commentCount || 0}</span>
           </button>
 
-          <button 
+          <button
             onClick={handleShare}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/30 transition-all font-bold text-sm ms-auto sm:ms-0"
           >
             <Share2 className="w-5 h-5" />
-            <span className="hidden sm:inline">{shareCount} {t('feed.shares')}</span>
+            <span className="hidden sm:inline">
+              {shareCount} {t("feed.shares")}
+            </span>
           </button>
 
           {/* Engagement Meta */}
           <div className="hidden sm:flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-gray-400 ms-auto">
-            <span className="flex items-center gap-1.5" title={`${viewCount} Total Impressions`}>
+            <span
+              className="flex items-center gap-1.5"
+              title={`${viewCount} Total Impressions`}
+            >
               <Eye className="w-3.5 h-3.5" />
-              {uniqueViewCount.toLocaleString()} {t('feed.reach')}
+              {uniqueViewCount.toLocaleString()} {t("feed.reach")}
             </span>
           </div>
         </div>
@@ -478,9 +596,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
         {/* Comments Section */}
         <AnimatePresence>
           {showComments && (
-            <motion.div 
+            <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="mt-6 pt-6 border-t border-gray-100 dark:border-white/5 space-y-6"
             >
@@ -510,7 +628,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-base font-black text-gray-900 dark:text-gray-100 flex items-center gap-2">
                   <Share2 className="w-5 h-5 text-primary-500" />
-                  <span>{t('feed.shareRepost')}</span>
+                  <span>{t("feed.shareRepost")}</span>
                 </h3>
                 <button
                   onClick={() => setIsShareModalOpen(false)}
@@ -531,8 +649,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                     <Repeat className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">{t('feed.shareRepost').split('/')[0].trim()}</h4>
-                    <p className="text-xs text-gray-500">{t('feed.reposted')}</p>
+                    <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                      {t("feed.shareRepost").split("/")[0].trim()}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {t("feed.reposted")}
+                    </p>
                   </div>
                 </button>
 
@@ -540,12 +662,12 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                 <div className="p-4 rounded-2xl border border-gray-200 dark:border-gray-800 space-y-3 bg-gray-50/50 dark:bg-gray-900/30">
                   <div className="flex items-center gap-2 text-xs font-bold text-gray-700 dark:text-gray-300">
                     <Edit className="w-4 h-4 text-secondary-500" />
-                    <span>{t('feed.quoteThoughts')}</span>
+                    <span>{t("feed.quoteThoughts")}</span>
                   </div>
                   <textarea
                     value={quoteContent}
                     onChange={(e) => setQuoteContent(e.target.value)}
-                    placeholder={t('feed.quotePlaceholder')}
+                    placeholder={t("feed.quotePlaceholder")}
                     dir="auto"
                     className="w-full bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl p-3 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                     rows={2}
@@ -555,7 +677,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                     disabled={isReposting || !quoteContent.trim()}
                     className="w-full py-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 hover:from-primary-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-primary-500/20"
                   >
-                    {isReposting ? t('common.loading') : t('feed.repostWithThoughts')}
+                    {isReposting
+                      ? t("common.loading")
+                      : t("feed.repostWithThoughts")}
                   </button>
                 </div>
 
@@ -568,7 +692,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                   className="w-full flex items-center gap-3 p-3 rounded-2xl border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 transition-all text-left"
                 >
                   <Copy className="w-4 h-4 text-gray-400 ml-1" />
-                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('feed.copyLink')}</span>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                    {t("feed.copyLink")}
+                  </span>
                 </button>
               </div>
             </motion.div>

@@ -38,7 +38,10 @@ export default function BusinessProfileSimplified({
     if (!path) return undefined;
     if (path.startsWith("http")) return path;
     const baseUrl =
-      process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      (typeof window !== "undefined"
+        ? window.location.origin
+        : "http://localhost:5000");
     return `${baseUrl}${path}`;
   };
 
@@ -77,6 +80,7 @@ export default function BusinessProfileSimplified({
         await businessService.followBusiness(businessId);
         setIsFollowing(true);
       }
+      window.dispatchEvent(new Event("business:updated"));
     } catch (error) {
       console.error("Follow action failed:", error);
     }

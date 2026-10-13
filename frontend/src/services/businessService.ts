@@ -1,4 +1,4 @@
-import api from './api';
+import api from "./api";
 
 export interface Business {
   _id: string;
@@ -102,6 +102,7 @@ const businessService = {
     return response.data.data;
   },
 
+  // Get businesses followed by the authenticated user for the sidebar
   getFollowedBusinesses: async (): Promise<Business[]> => {
     const response = await api.get("/businesses/followed");
     return response.data.data;
@@ -110,48 +111,52 @@ const businessService = {
   // Create business
   createBusiness: async (data: CreateBusinessData): Promise<Business> => {
     const formData = new FormData();
-    
-    formData.append('name', data.name);
-    formData.append('description', data.description);
-    formData.append('category', data.category);
-    
-    if (data.website) formData.append('website', data.website);
-    if (data.email) formData.append('email', data.email);
-    if (data.phone) formData.append('phone', data.phone);
-    if (data.logo) formData.append('logo', data.logo);
-    if (data.coverImage) formData.append('coverImage', data.coverImage);
 
-    const response = await api.post('/businesses', formData, {
+    formData.append("name", data.name);
+    formData.append("description", data.description);
+    formData.append("category", data.category);
+
+    if (data.website) formData.append("website", data.website);
+    if (data.email) formData.append("email", data.email);
+    if (data.phone) formData.append("phone", data.phone);
+    if (data.logo) formData.append("logo", data.logo);
+    if (data.coverImage) formData.append("coverImage", data.coverImage);
+
+    const response = await api.post("/businesses", formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
-    
+
     return response.data.data;
   },
 
   // Update business
-  updateBusiness: async (businessId: string, data: UpdateBusinessData): Promise<Business> => {
+  updateBusiness: async (
+    businessId: string,
+    data: UpdateBusinessData,
+  ): Promise<Business> => {
     const formData = new FormData();
-    
-    if (data.name) formData.append('name', data.name);
-    if (data.description) formData.append('description', data.description);
-    if (data.category) formData.append('category', data.category);
-    if (data.website) formData.append('website', data.website);
-    if (data.email) formData.append('email', data.email);
-    if (data.phone) formData.append('phone', data.phone);
-    if (data.address) formData.append('address', JSON.stringify(data.address));
-    if (data.socialLinks) formData.append('socialLinks', JSON.stringify(data.socialLinks));
-    if (data.hashtags) formData.append('hashtags', data.hashtags);
-    if (data.logo) formData.append('logo', data.logo);
-    if (data.coverImage) formData.append('coverImage', data.coverImage);
+
+    if (data.name) formData.append("name", data.name);
+    if (data.description) formData.append("description", data.description);
+    if (data.category) formData.append("category", data.category);
+    if (data.website) formData.append("website", data.website);
+    if (data.email) formData.append("email", data.email);
+    if (data.phone) formData.append("phone", data.phone);
+    if (data.address) formData.append("address", JSON.stringify(data.address));
+    if (data.socialLinks)
+      formData.append("socialLinks", JSON.stringify(data.socialLinks));
+    if (data.hashtags) formData.append("hashtags", data.hashtags);
+    if (data.logo) formData.append("logo", data.logo);
+    if (data.coverImage) formData.append("coverImage", data.coverImage);
 
     const response = await api.put(`/businesses/${businessId}`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     });
-    
+
     return response.data.data;
   },
 
@@ -185,33 +190,60 @@ const businessService = {
   },
 
   // Search businesses
-  searchBusinesses: async (query: string, category?: string): Promise<Business[]> => {
+  searchBusinesses: async (
+    query: string,
+    category?: string,
+  ): Promise<Business[]> => {
     let url = `/businesses/search?q=${encodeURIComponent(query)}`;
     if (category) url += `&category=${category}`;
-    
+
     const response = await api.get(url);
     return response.data.data;
   },
 
   // Get businesses by category
-  getByCategory: async (category: string, page = 1, limit = 10): Promise<{ businesses: Business[]; hasMore: boolean }> => {
+  getByCategory: async (
+    category: string,
+    page = 1,
+    limit = 10,
+  ): Promise<{ businesses: Business[]; hasMore: boolean }> => {
     try {
-      const response = await api.get(`/businesses/category/${category}?page=${page}&limit=${limit}`);
+      const response = await api.get(
+        `/businesses/category/${category}?page=${page}&limit=${limit}`,
+      );
       return response.data.data;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Failed to load businesses');
+      throw new Error(
+        error.response?.data?.message || "Failed to load businesses",
+      );
     }
   },
 
   // Add offering
-  addOffering: async (businessId: string, data: { name: string; description?: string; price?: number; category?: string }): Promise<Business> => {
-    const response = await api.post(`/businesses/${businessId}/offerings`, data);
+  addOffering: async (
+    businessId: string,
+    data: {
+      name: string;
+      description?: string;
+      price?: number;
+      category?: string;
+    },
+  ): Promise<Business> => {
+    const response = await api.post(
+      `/businesses/${businessId}/offerings`,
+      data,
+    );
     return response.data.data;
   },
 
   // Remove offering
-  removeOffering: async (businessId: string, offeringId: string): Promise<Business> => {
-    const response = await api.delete(`/businesses/${businessId}/offerings/${offeringId}`);
+  removeOffering: async (
+    businessId: string,
+    offeringId: string,
+  ): Promise<Business> => {
+    const response = await api.delete(
+      `/businesses/${businessId}/offerings/${offeringId}`,
+    );
     return response.data.data;
   },
   // Get detailed post performance

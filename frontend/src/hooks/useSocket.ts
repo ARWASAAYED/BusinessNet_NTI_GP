@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { useAuthStore } from '@/store/authStore';
+import { useEffect, useState, useCallback, useRef } from "react";
+import { io, Socket } from "socket.io-client";
+import { useAuthStore } from "@/store/authStore";
+import { SOCKET_URL } from "@/utils/constants";
 
 interface UseSocketOptions {
   autoConnect?: boolean;
@@ -10,9 +11,11 @@ let socketInstance: Socket | null = null;
 
 export const useSocket = (url?: string, options: UseSocketOptions = {}) => {
   const { autoConnect = true } = options;
-  const [isConnected, setIsConnected] = useState(socketInstance?.connected || false);
+  const [isConnected, setIsConnected] = useState(
+    socketInstance?.connected || false,
+  );
   const { token } = useAuthStore();
-  const socketUrl = url || process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+  const socketUrl = url || SOCKET_URL;
 
   useEffect(() => {
     if (!autoConnect || !token) return;
@@ -20,7 +23,9 @@ export const useSocket = (url?: string, options: UseSocketOptions = {}) => {
     if (!socketInstance) {
       socketInstance = io(socketUrl, {
         autoConnect: true,
-        auth: { token }
+        reconnection: false,
+        timeout: 5000,
+        auth: { token },
       });
     } else {
       // Update token if changed
@@ -32,43 +37,49 @@ export const useSocket = (url?: string, options: UseSocketOptions = {}) => {
 
     const onConnect = () => {
       setIsConnected(true);
-      console.log('Socket connected');
+      console.log("Socket connected");
     };
 
     const onDisconnect = () => {
       setIsConnected(false);
-      console.log('Socket disconnected');
+      console.log("Socket disconnected");
     };
 
     const onError = (error: any) => {
       // Avoid spamming the same error
-      console.warn('Socket connection error:', error.message || error);
+      console.warn("Socket connection error:", error.message || error);
     };
 
-    socketInstance.on('connect', onConnect);
-    socketInstance.on('disconnect', onDisconnect);
-    socketInstance.on('connect_error', onError);
+    socketInstance.on("connect", onConnect);
+    socketInstance.on("disconnect", onDisconnect);
+    socketInstance.on("connect_error", onError);
 
     return () => {
       if (socketInstance) {
-        socketInstance.off('connect', onConnect);
-        socketInstance.off('disconnect', onDisconnect);
-        socketInstance.off('connect_error', onError);
+        socketInstance.off("connect", onConnect);
+        socketInstance.off("disconnect", onDisconnect);
+        socketInstance.off("connect_error", onError);
       }
     };
   }, [socketUrl, autoConnect, token]);
 
-  const on = useCallback((event: string, callback: (...args: any[]) => void) => {
-    socketInstance?.on(event, callback);
-  }, []);
+  const on = useCallback(
+    (event: string, callback: (...args: any[]) => void) => {
+      socketInstance?.on(event, callback);
+    },
+    [],
+  );
 
-  const off = useCallback((event: string, callback?: (...args: any[]) => void) => {
-    if (callback) {
-      socketInstance?.off(event, callback);
-    } else {
-      socketInstance?.off(event);
-    }
-  }, []);
+  const off = useCallback(
+    (event: string, callback?: (...args: any[]) => void) => {
+      if (callback) {
+        socketInstance?.off(event, callback);
+      } else {
+        socketInstance?.off(event);
+      }
+    },
+    [],
+  );
 
   const emit = useCallback((event: string, data?: unknown) => {
     if (socketInstance?.connected) {

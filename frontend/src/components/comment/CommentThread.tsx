@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import CommentItem from './CommentItem';
-import commentService, { Comment } from '@/services/commentService';
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import CommentItem from "./CommentItem";
+import commentService, { Comment } from "@/services/commentService";
 
 interface CommentThreadProps {
   comment: Comment;
@@ -41,21 +41,17 @@ const CommentThread: React.FC<CommentThreadProps> = ({
       const data = await commentService.getReplies(comment._id);
       setReplies(data);
     } catch (err: any) {
-      console.error('Failed to load replies:', err);
+      console.error("Failed to load replies:", err);
     } finally {
       setIsLoadingReplies(false);
     }
   };
 
-  const handleReply = (commentId: string, content: string) => {
-    onReply?.(commentId, content);
-    setReplyCount(replyCount + 1);
+  const handleReply = async (commentId: string, content: string) => {
+    await onReply?.(commentId, content);
+    setReplyCount((current) => current + 1);
     setShowReplies(true);
-    
-    // Reload replies to show the new one
-    setTimeout(() => {
-      loadReplies();
-    }, 500);
+    await loadReplies();
   };
 
   const handleDelete = (commentId: string) => {
@@ -63,7 +59,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
       onDelete?.(commentId);
     } else {
       // Delete reply
-      setReplies(replies.filter(r => r._id !== commentId));
+      setReplies(replies.filter((r) => r._id !== commentId));
       setReplyCount(Math.max(0, replyCount - 1));
     }
   };
@@ -87,8 +83,8 @@ const CommentThread: React.FC<CommentThreadProps> = ({
           className="ml-14 mt-2 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
         >
           {isLoadingReplies
-            ? 'Loading replies...'
-            : `View ${replyCount} ${replyCount === 1 ? 'reply' : 'replies'}`}
+            ? "Loading replies..."
+            : `View ${replyCount} ${replyCount === 1 ? "reply" : "replies"}`}
         </button>
       )}
 
@@ -107,7 +103,7 @@ const CommentThread: React.FC<CommentThreadProps> = ({
         {showReplies && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="space-y-1"
           >

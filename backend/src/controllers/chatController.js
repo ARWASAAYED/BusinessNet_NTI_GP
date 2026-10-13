@@ -1,4 +1,4 @@
-const Message = require("../models/Message");
+const Message = require("../models/message");
 const User = require("../models/user");
 const mongoose = require("mongoose");
 const aiService = require("../services/aiService");
@@ -46,7 +46,7 @@ exports.getConversations = async (req, res, next) => {
     const populatedConversations = await Promise.all(
       messages.map(async (conv) => {
         const participant = await User.findById(conv._id).select(
-          "username fullName avatarUrl"
+          "username fullName avatarUrl",
         );
         if (!participant) return null;
 
@@ -72,7 +72,7 @@ exports.getConversations = async (req, res, next) => {
           unreadCount: conv.unreadCount,
           updatedAt: conv.lastMessage.createdAt,
         };
-      })
+      }),
     );
 
     res.json({
@@ -92,7 +92,7 @@ exports.startConversation = async (req, res, next) => {
 
     // Check if valid recipient
     const recipient = await User.findById(recipientId).select(
-      "username fullName avatarUrl"
+      "username fullName avatarUrl",
     );
     if (!recipient) {
       return res.status(404).json({ error: "User not found" });
@@ -268,7 +268,7 @@ exports.markAsRead = async (req, res, next) => {
 
     await Message.updateMany(
       { sender: friendId, receiver: userId, read: false },
-      { $set: { read: true } }
+      { $set: { read: true } },
     );
 
     res.json({
@@ -287,7 +287,10 @@ exports.uploadFile = async (req, res) => {
         error: "No file uploaded",
       });
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl =
+      req.file.path ||
+      req.file.url ||
+      (req.file.filename ? `/uploads/${req.file.filename}` : "");
     res.json({
       success: true,
       data: {

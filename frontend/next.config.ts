@@ -54,15 +54,6 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "**.vercel.app",
       },
-      // Supabase Storage
-      {
-        protocol: "https",
-        hostname: "**.supabase.co",
-      },
-      {
-        protocol: "https",
-        hostname: "jkfjryaankqlkdyecnva.supabase.co",
-      },
     ],
   },
 };
