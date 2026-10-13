@@ -83,6 +83,8 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 5000;
 app.set("io", io);
+app.set("server", server);
+app.server = server;
 
 // ─── Security & Parsing ──────────────────────────────────────────────────────
 app.use(

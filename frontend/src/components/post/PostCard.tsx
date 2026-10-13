@@ -473,22 +473,36 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                         controls
                         playsInline
                         preload="metadata"
+                        crossOrigin="anonymous"
                         className={`w-full ${
                           isSingle
                             ? "max-h-[520px] object-contain bg-black rounded-2xl"
                             : "h-full min-h-[220px] max-h-[400px] object-cover"
                         }`}
+                        onError={(e) => {
+                          // Try without crossOrigin if CORS fails
+                          (e.target as HTMLVideoElement).removeAttribute("crossorigin");
+                        }}
                       />
                     ) : (
                       <img
                         src={mediaSrc}
                         alt=""
                         loading="lazy"
+                        crossOrigin="anonymous"
                         className={`w-full ${
                           isSingle
                             ? "max-h-[520px] object-contain rounded-2xl"
                             : "h-full min-h-[220px] max-h-[400px] object-cover hover:scale-105 transition-transform duration-500"
                         }`}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          // If crossOrigin fetch failed, retry without it
+                          if (target.getAttribute("crossorigin")) {
+                            target.removeAttribute("crossorigin");
+                            target.src = mediaSrc ?? "";
+                          }
+                        }}
                       />
                     )}
                     <div className="absolute inset-0 bg-black/10 opacity-0 group-hover/media:opacity-100 transition-opacity pointer-events-none rounded-2xl" />
@@ -498,6 +512,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
             </div>
           );
         })()}
+
 
         {/* Actions Bar */}
         <div className="flex items-center gap-2 sm:gap-4 pt-4 border-t border-gray-100 dark:border-white/5">

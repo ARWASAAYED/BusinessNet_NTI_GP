@@ -1,8 +1,21 @@
 import type { NextConfig } from "next";
 import { resolve, join } from "path";
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
+  "http://localhost:5000";
+
 const nextConfig: NextConfig = {
   outputFileTracingRoot: resolve(join(__dirname, "..")),
+  // Proxy media requests to the backend to avoid CORS issues in production
+  async rewrites() {
+    return [
+      {
+        source: "/proxy/media/:id",
+        destination: `${BACKEND_URL}/api/v1/media/:id`,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
@@ -33,6 +46,12 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
+        port: "5000",
+      },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "3000",
       },
       {
         protocol: "https",

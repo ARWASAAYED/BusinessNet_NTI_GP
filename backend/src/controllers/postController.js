@@ -41,6 +41,10 @@ const formatPost = (post) => {
 
   return {
     ...p,
+    // Map tag → category so the frontend Post type is satisfied
+    category: p.tag || p.category || "General",
+    // Alias upvotes as likes for frontend compatibility
+    likes: p.upvotes || [],
     community:
       community && typeof community === "object" && community.name
         ? {
@@ -83,6 +87,7 @@ const formatPost = (post) => {
     uniqueViews: p.uniqueViews || 0,
   };
 };
+
 
 /**
  * Extracts hashtags from content string and upserts them to DB as Hashtags AND Keywords
