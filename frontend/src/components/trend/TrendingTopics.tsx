@@ -26,8 +26,20 @@ export default function TrendingTopics({ onSelect }: TrendingTopicsProps) {
       setIsLoading(true);
       try {
         const data = await trendService.getTrendingTopics(selectedCategory);
+        const categoryWordMap: Record<string, string[]> = {
+          technology: ['technology', 'tech', 'software', 'ai', 'machinelearning', 'webdev', 'react', 'nextjs', 'cybersecurity', 'cloudnative', 'devops', 'python', 'esg'],
+          business: ['business', 'marketing', 'startup', 'entrepreneurship', 'sustainability', 'b2b', 'management'],
+          finance: ['finance', 'fintech', 'crypto', 'banking', 'venture', 'growth', 'remotework'],
+          design: ['design', 'uidesign', 'productled', 'ux', 'ui'],
+        };
+        const target = selectedCategory.toLowerCase();
+        const words = categoryWordMap[target] || [];
         const filtered = selectedCategory && selectedCategory !== "All"
-          ? (data || []).filter(item => !item.category || item.category === "General" || item.category.toLowerCase() === selectedCategory.toLowerCase())
+          ? (data || []).filter(item => {
+              const itemCat = (item.category || '').toLowerCase();
+              const itemName = (item.name || '').toLowerCase();
+              return itemCat === target || words.includes(itemName);
+            })
           : (data || []);
         setTrends(filtered);
       } catch (error) {

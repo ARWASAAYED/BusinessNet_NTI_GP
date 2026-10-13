@@ -38,8 +38,20 @@ export default function TrendingPage() {
           trendService.getTrendingPosts(1, 10, selectedCategory),
           trendService.getTrendingTopics(selectedCategory)
         ]);
+        const categoryWordMap: Record<string, string[]> = {
+          technology: ['technology', 'tech', 'software', 'ai', 'machinelearning', 'webdev', 'react', 'nextjs', 'cybersecurity', 'cloudnative', 'devops', 'python', 'esg'],
+          business: ['business', 'marketing', 'startup', 'entrepreneurship', 'sustainability', 'b2b', 'management'],
+          finance: ['finance', 'fintech', 'crypto', 'banking', 'venture', 'growth', 'remotework'],
+          design: ['design', 'uidesign', 'productled', 'ux', 'ui'],
+        };
+        const target = selectedCategory.toLowerCase();
+        const words = categoryWordMap[target] || [];
         const loadedTopics = selectedCategory && selectedCategory !== 'All'
-          ? (topicsData || []).filter(t => !t.category || t.category === 'General' || t.category.toLowerCase() === selectedCategory.toLowerCase())
+          ? (topicsData || []).filter(t => {
+              const itemCat = (t.category || '').toLowerCase();
+              const itemName = (t.name || '').toLowerCase();
+              return itemCat === target || words.includes(itemName);
+            })
           : (topicsData || []);
         setPosts(postsData.posts || []);
         setTopics(loadedTopics);

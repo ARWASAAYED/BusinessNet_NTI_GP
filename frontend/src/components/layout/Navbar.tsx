@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Megaphone,
   Compass,
+  BarChart3,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Avatar from "../common/Avatar";
@@ -55,6 +56,11 @@ const Navbar = () => {
         }
       },
       icon: <User className="w-4 h-4" />,
+    },
+    {
+      label: t("nav.dashboard") || "Dashboard",
+      onClick: () => router.push("/business/dashboard"),
+      icon: <BarChart3 className="w-4 h-4" />,
     },
     {
       label: t("nav.settings"),
