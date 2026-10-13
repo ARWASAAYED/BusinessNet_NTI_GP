@@ -17,8 +17,8 @@ export const getMediaUrl = (url?: string): string | undefined => {
   // Already an absolute URL — return as-is
   if (/^https?:\/\//i.test(url)) return url;
 
-  // On Vercel: route through the Next.js proxy rewrite to avoid cross-origin issues
-  if (typeof window !== "undefined" && window.location.hostname.includes("vercel.app")) {
+  // In browser: route through Next.js /proxy/media/:id rewrite to ensure same-origin requests with zero CORS
+  if (typeof window !== "undefined") {
     const mediaIdMatch = url.match(/\/media\/([a-f0-9]{24})/i);
     if (mediaIdMatch) {
       return `/proxy/media/${mediaIdMatch[1]}`;

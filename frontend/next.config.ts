@@ -3,7 +3,9 @@ import { resolve, join } from "path";
 
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, "") ||
-  "http://localhost:5000";
+  (process.env.VERCEL === "1" || process.env.NODE_ENV === "production"
+    ? "https://businessnet-backend.vercel.app"
+    : "http://localhost:5000");
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: resolve(join(__dirname, "..")),

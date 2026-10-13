@@ -404,15 +404,44 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
             <p className="text-xs text-gray-800 dark:text-gray-200 font-medium whitespace-pre-wrap">
               {post.originalPost.content}
             </p>
-            {post.originalPost.media && post.originalPost.media.length > 0 && (
-              <div className="mt-2 rounded-xl overflow-hidden max-h-48">
-                <img
-                  src={getFullUrl(post.originalPost.media[0].url)}
-                  alt=""
-                  className="w-full h-full object-cover max-h-48"
-                />
-              </div>
-            )}
+            {post.originalPost.media && post.originalPost.media.length > 0 && (() => {
+              const origMedia = post.originalPost.media[0];
+              const origUrl = getFullUrl(origMedia.url || (origMedia as any).path) || origMedia.url;
+              const isVideo = origMedia.type === "video" || /\.(mp4|webm|mov|mkv|avi|m4v|3gp|flv)$/i.test(origMedia.url || "");
+
+              return (
+                <div className="mt-2 rounded-xl overflow-hidden max-h-64 bg-black/5 dark:bg-black/40">
+                  {isVideo ? (
+                    <video
+                      src={origUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      crossOrigin="anonymous"
+                      className="w-full max-h-64 object-contain bg-black rounded-xl"
+                      onError={(e) => {
+                        (e.target as HTMLVideoElement).removeAttribute("crossorigin");
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={origUrl}
+                      alt=""
+                      loading="lazy"
+                      crossOrigin="anonymous"
+                      className="w-full max-h-64 object-cover rounded-xl"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        if (target.getAttribute("crossorigin")) {
+                          target.removeAttribute("crossorigin");
+                          target.src = origUrl ?? "";
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
 
