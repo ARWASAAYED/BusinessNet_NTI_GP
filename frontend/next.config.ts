@@ -1,15 +1,8 @@
 import type { NextConfig } from "next";
-import path from "path";
+import { resolve, join } from "path";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://192.168.1.9:3000",
-  ],
-  turbopack: {
-    root: path.resolve(__dirname),
-  },
+  outputFileTracingRoot: resolve(join(__dirname, "..")),
   images: {
     remotePatterns: [
       {
