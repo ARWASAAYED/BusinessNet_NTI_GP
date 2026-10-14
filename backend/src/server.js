@@ -104,6 +104,7 @@ app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
     message: "BusinessNet API is running",
+    version: "2.0.0-gridfs",
     timestamp: new Date(),
   });
 });
