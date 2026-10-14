@@ -325,11 +325,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onDelete }) => {
                 <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                   {formatTimeAgo(post.createdAt, locale)}
                 </p>
-                {post.category && (
-                  <span className="text-[10px] font-black uppercase text-primary-500 tracking-tight bg-primary-500/10 px-2 py-0.5 rounded-md">
-                    {t(`categories.${post.category}`, post.category)}
-                  </span>
-                )}
+
               </div>
             </div>
           </div>
